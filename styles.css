@@ -302,7 +302,7 @@ button:disabled {
 }
 
 .battle-result {
-    flex: 2;
+    flex: 2 1 320px;
     min-width: 320px;
     background: var(--bg-panel-light);
     border: 4px solid var(--border-dark);
@@ -313,9 +313,8 @@ button:disabled {
 }
 
 #result-log {
-    flex: 1 1 360px;
+    flex: 1 1 auto;
     min-height: 320px;
-    max-height: clamp(320px, 60vh, 520px);
     background: #161521;
     border: 4px solid var(--border-dark);
     padding: 16px 18px;
@@ -398,7 +397,6 @@ button:disabled {
 
     #result-log {
         min-height: 260px;
-        max-height: clamp(260px, 55vh, 420px);
     }
 }
 
