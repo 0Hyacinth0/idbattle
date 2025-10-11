@@ -2,7 +2,7 @@
 import { generateAttributes } from './models/player.js';
 import { BattleService } from './services/battleService.js';
 import { updatePlayerInfo, initPlayerPanels } from './ui/playerUI.js';
-import { displayBattleLog } from './ui/logUI.js';
+import { displayBattleLog, resetBattleLog } from './ui/logUI.js';
 import { EquipmentType, equipmentList, setEffects, equipmentByType } from './models/equipment.js';
 
 // 将一些常量挂载到window对象，以便在其他模块中访问
@@ -50,10 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePlayerInfo(player1, true);
             updatePlayerInfo(player2, false);
 
-            const resultLog = document.getElementById('result-log');
-            if (resultLog) {
-                resultLog.textContent = '战斗开始...';
-            }
+            resetBattleLog('战斗准备中...');
 
             const logCallback = (newLog) => {
                 displayBattleLog(newLog, updatePlayerInfo, player1, player2);

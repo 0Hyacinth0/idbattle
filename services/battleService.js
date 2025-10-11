@@ -36,7 +36,7 @@ export class BattleService {
             this.appendLog(log, logCallback, `\n第 ${round} 回合:`);
             round++;
 
-            await this.delay(250);
+            await this.delay(600);
             const statusMessages = this.handleStatusEffects();
             if (statusMessages.length) {
                 this.appendLog(log, logCallback, ...statusMessages);
@@ -64,7 +64,7 @@ export class BattleService {
                     break;
                 }
 
-                await this.delay(300);
+                await this.delay(750);
             }
         }
 
