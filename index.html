@@ -30,6 +30,12 @@
                 <div id="player1-stats">
                     <p>名称: <span id="p1-name">-</span></p>
                     <p>生命: <span id="p1-health">-</span>/<span id="p1-max-health">-</span></p>
+                    <div class="health-meter" id="p1-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家1生命值" aria-live="polite">
+                        <div class="health-meter__track">
+                            <div class="health-meter__fill"></div>
+                        </div>
+                        <span class="health-meter__value" id="p1-health-bar-value">--</span>
+                    </div>
                     <p>攻击: <span id="p1-attack">-</span></p>
                     <p>防御: <span id="p1-defense">-</span></p>
                     <p>加速: <span id="p1-speed">-</span></p>
@@ -51,6 +57,12 @@
                 <div id="player2-stats">
                     <p>名称: <span id="p2-name">-</span></p>
                     <p>生命: <span id="p2-health">-</span>/<span id="p2-max-health">-</span></p>
+                    <div class="health-meter" id="p2-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家2生命值" aria-live="polite">
+                        <div class="health-meter__track">
+                            <div class="health-meter__fill"></div>
+                        </div>
+                        <span class="health-meter__value" id="p2-health-bar-value">--</span>
+                    </div>
                     <p>攻击: <span id="p2-attack">-</span></p>
                     <p>防御: <span id="p2-defense">-</span></p>
                     <p>加速: <span id="p2-speed">-</span></p>

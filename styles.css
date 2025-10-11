@@ -359,6 +359,141 @@ button:disabled {
     box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
 }
 
+.health-meter {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 14px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(30, 41, 59, 0.78));
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18), 0 10px 20px rgba(8, 17, 40, 0.55);
+    overflow: hidden;
+    transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.health-meter::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 0,
+        rgba(255, 255, 255, 0.04) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+.health-meter__track {
+    position: relative;
+    height: 16px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: radial-gradient(circle at 50% 50%, rgba(148, 163, 184, 0.2), rgba(15, 23, 42, 0.9));
+    box-shadow: inset 0 4px 12px rgba(7, 16, 35, 0.85);
+}
+
+.health-meter__fill {
+    position: relative;
+    height: 100%;
+    width: 0%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.8), rgba(59, 130, 246, 0.9));
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.45);
+    transition: width 0.45s cubic-bezier(0.22, 0.68, 0, 1.01), background 0.35s ease, box-shadow 0.35s ease;
+    transform-origin: left center;
+}
+
+.health-meter__fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 55%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.health-meter__value {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(94, 234, 212, 0.45);
+    text-align: right;
+    min-width: 82px;
+}
+
+.player1-info .health-meter__value {
+    color: var(--accent-blue);
+}
+
+.player2-info .health-meter__value {
+    color: var(--accent-red);
+}
+
+.health-meter[data-state='healthy'] {
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.25), 0 14px 24px rgba(13, 148, 136, 0.35);
+}
+
+.health-meter[data-state='healthy'] .health-meter__fill {
+    background: linear-gradient(90deg, rgba(45, 212, 191, 0.95), rgba(14, 165, 233, 0.95));
+    box-shadow: 0 0 18px rgba(14, 165, 233, 0.5);
+}
+
+.health-meter[data-state='warning'] {
+    border-color: rgba(251, 191, 36, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.25), 0 14px 24px rgba(180, 83, 9, 0.35);
+}
+
+.health-meter[data-state='warning'] .health-meter__fill {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.95));
+    box-shadow: 0 0 18px rgba(251, 191, 36, 0.48);
+}
+
+.health-meter[data-state='critical'] {
+    border-color: rgba(248, 113, 113, 0.52);
+    box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.3), 0 16px 26px rgba(239, 68, 68, 0.35);
+}
+
+.health-meter[data-state='critical'] .health-meter__fill {
+    background: linear-gradient(90deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.95));
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.52);
+}
+
+.health-meter[data-state='overheal'] {
+    border-color: rgba(192, 132, 252, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(165, 180, 252, 0.28), 0 14px 28px rgba(129, 140, 248, 0.35);
+}
+
+.health-meter[data-state='overheal'] .health-meter__fill {
+    background: linear-gradient(90deg, rgba(196, 181, 253, 0.95), rgba(129, 140, 248, 0.95));
+    box-shadow: 0 0 22px rgba(129, 140, 248, 0.55);
+}
+
+.health-meter[data-trend='down'] .health-meter__fill {
+    filter: brightness(0.92);
+}
+
+.health-meter[data-trend='up'] .health-meter__fill {
+    filter: brightness(1.08);
+}
+
+.health-meter[data-state='idle'] {
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12), 0 10px 18px rgba(8, 17, 40, 0.4);
+}
+
+.health-meter[data-state='idle'] .health-meter__value {
+    color: rgba(148, 163, 184, 0.6);
+    text-shadow: none;
+}
+
 #player1-stats span, #player2-stats span {
     font-weight: bold;
     font-size: 14px;

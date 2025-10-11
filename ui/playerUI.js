@@ -1,4 +1,5 @@
 // 玩家UI模块
+import { updateHealthMeter, resetHealthMeter } from './healthBar.js';
 
 // 更新玩家信息显示
 function updatePlayerInfo(player, isPlayer1) {
@@ -32,6 +33,7 @@ function updatePlayerInfo(player, isPlayer1) {
     elements.name.textContent = player.name;
     elements.health.textContent = player.health;
     elements.maxHealth.textContent = player.maxHealth;
+    updateHealthMeter(prefix, player.health, player.maxHealth);
 
     // 计算考虑临时效果后的实际属性值
     let actualAttack = player.attack;
@@ -166,6 +168,7 @@ function initPlayerPanels() {
     document.getElementById('p1-skill').textContent = '-';
     document.getElementById('p1-equipment').innerHTML = '';
     document.getElementById('p1-status').textContent = '无特殊状态';
+    resetHealthMeter('p1');
 
     // 玩家2
     document.getElementById('p2-name').textContent = '-';
@@ -177,6 +180,7 @@ function initPlayerPanels() {
     document.getElementById('p2-skill').textContent = '-';
     document.getElementById('p2-equipment').innerHTML = '';
     document.getElementById('p2-status').textContent = '无特殊状态';
+    resetHealthMeter('p2');
 }
 
 export { updatePlayerInfo, initPlayerPanels };
