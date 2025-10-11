@@ -105,7 +105,7 @@ h3 {
 
 .player-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px 20px;
     background: var(--bg-panel-light);
     border: 4px solid var(--border-dark);
@@ -172,6 +172,13 @@ button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+#battle-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 10px 28px;
+    min-height: 0;
 }
 
 .form-error {
@@ -306,8 +313,9 @@ button:disabled {
 }
 
 #result-log {
-    flex: 1;
-    height: 480px;
+    flex: 1 1 360px;
+    min-height: 320px;
+    max-height: clamp(320px, 60vh, 520px);
     background: #161521;
     border: 4px solid var(--border-dark);
     padding: 16px 18px;
@@ -317,22 +325,48 @@ button:disabled {
     overflow-y: auto;
 }
 
+
 .log-line {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     padding: 8px 10px;
     border: 3px solid var(--border-dark);
     background: var(--log-even);
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
 }
 
-.log-line:nth-child(odd) {
-    background: var(--log-odd);
-}
-
 .log-line--system {
     color: var(--border-dark);
     background: var(--system-message);
     box-shadow: none;
+}
+
+.log-round {
+    margin-bottom: 14px;
+    border: 3px solid var(--border-dark);
+    background: var(--log-even);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+}
+
+.log-round__header {
+    padding: 10px 12px;
+    border-bottom: 3px solid var(--border-dark);
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.log-round__body {
+    display: grid;
+    gap: 6px;
+    padding: 12px 18px 14px;
+    border-left: 3px solid var(--border-dark);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.log-entry {
+    padding: 0;
+    border: 0;
+    background: none;
 }
 
 #result-log::-webkit-scrollbar {
@@ -363,11 +397,12 @@ button:disabled {
     }
 
     #result-log {
-        height: 360px;
+        min-height: 260px;
+        max-height: clamp(260px, 55vh, 420px);
     }
 }
 
-@media (max-width: 540px) {
+@media (max-width: 720px) {
     h1 {
         font-size: 1.5rem;
     }

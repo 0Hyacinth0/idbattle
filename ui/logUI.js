@@ -2,6 +2,9 @@
 
 const LOG_RENDER_INTERVAL = 600;
 
+const ROUND_HEADER_REGEX = /^第\s*\d+\s*回合[:：]/;
+const SEPARATOR_REGEX = /^=+$/;
+
 function escapeHtml(text) {
     return text
         .replace(/&/g, '&amp;')
@@ -37,10 +40,35 @@ function ensureLogState(resultLog) {
             renderedLines: 0,
             processing: false,
             timeoutId: null,
-            players: []
+            players: [],
+            currentRoundBody: null
         };
     }
     return resultLog._logState;
+}
+
+function createRoundContainer(resultLog, line, players) {
+    const roundElement = document.createElement('div');
+    roundElement.classList.add('log-round');
+
+    const header = document.createElement('div');
+    header.classList.add('log-round__header');
+    header.appendChild(highlightLine(line, players));
+    roundElement.appendChild(header);
+
+    const body = document.createElement('div');
+    body.classList.add('log-round__body');
+    roundElement.appendChild(body);
+
+    resultLog.appendChild(roundElement);
+    return body;
+}
+
+function appendSystemLine(resultLog, line, className = 'log-line') {
+    const lineElement = document.createElement('div');
+    lineElement.classList.add(...className.split(' '));
+    lineElement.textContent = line;
+    resultLog.appendChild(lineElement);
 }
 
 function processLogQueue(resultLog) {
@@ -56,10 +84,25 @@ function processLogQueue(resultLog) {
 
     state.processing = true;
     const line = state.queue.shift();
-    const lineElement = document.createElement('div');
-    lineElement.classList.add('log-line');
-    lineElement.appendChild(highlightLine(line, state.players));
-    resultLog.appendChild(lineElement);
+    const trimmedLine = line.trim();
+
+    if (ROUND_HEADER_REGEX.test(trimmedLine)) {
+        state.currentRoundBody = createRoundContainer(resultLog, trimmedLine, state.players);
+    } else if (SEPARATOR_REGEX.test(trimmedLine)) {
+        appendSystemLine(resultLog, line, 'log-line log-line--system');
+        state.currentRoundBody = null;
+    } else if (state.currentRoundBody) {
+        const entry = document.createElement('div');
+        entry.classList.add('log-entry');
+        entry.appendChild(highlightLine(line, state.players));
+        state.currentRoundBody.appendChild(entry);
+    } else {
+        const lineElement = document.createElement('div');
+        lineElement.classList.add('log-line');
+        lineElement.appendChild(highlightLine(line, state.players));
+        resultLog.appendChild(lineElement);
+    }
+
     resultLog.scrollTop = resultLog.scrollHeight;
 
     state.timeoutId = window.setTimeout(() => processLogQueue(resultLog), LOG_RENDER_INTERVAL);
@@ -114,7 +157,8 @@ function resetBattleLog(initialMessage = '') {
         renderedLines: 0,
         processing: false,
         timeoutId: null,
-        players: []
+        players: [],
+        currentRoundBody: null
     };
 
     if (initialMessage) {
