@@ -1,0 +1,304 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+}
+
+/* 像素字体引入 */
+@font-face {
+    font-family: 'PixelFont';
+    src: url('https://fonts.cdnfonts.com/css/common-pixel') format('truetype');
+    font-display: swap;
+}
+
+body {
+    font-family: 'PixelFont', 'Press Start 2P', monospace;
+    background-color: #0f172a;
+    color: #e2e2e2;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    background-image: linear-gradient(to bottom, #0f172a, #1e293b);
+    font-size: 14px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #1e293b;
+    padding: 24px;
+    border: 4px solid #334155;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.version-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: #0984e3;
+    color: white;
+    padding: 6px 12px;
+    border: 2px solid #000;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+    transform: rotate(2deg);
+}
+
+/* 标题样式 */
+h1 {
+    text-align: center;
+    color: #e94560;
+    margin-bottom: 32px;
+    font-size: 1.8rem;
+    text-shadow: 2px 2px 0 #000000;
+    letter-spacing: 2px;
+}
+
+h2 {
+    color: #00b894;
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    border-bottom: 3px solid #00b894;
+    padding-bottom: 8px;
+    text-shadow: 1px 1px 0 #000000;
+}
+
+h3 {
+    color: #0984e3;
+    margin: 16px 0 10px;
+    font-size: 1.0rem;
+    text-shadow: 1px 1px 0 #000000;
+}
+
+/* 玩家表单样式 */
+.player-form {
+    margin-bottom: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #334155;
+    border: 3px solid #475569;
+}
+
+.player-input {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 250px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #e2e2e2;
+    text-shadow: 1px 1px 0 #000000;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 3px solid #475569;
+    background-color: #1e293b;
+    color: #e2e2e2;
+    font-size: 14px;
+    font-family: 'PixelFont', monospace;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+input:focus {
+    outline: none;
+    border-color: #00b894;
+}
+
+button {
+    background-color: #e94560;
+    color: white;
+    border: 3px solid #000000;
+    padding: 12px 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'PixelFont', monospace;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease;
+    margin: 0;
+}
+
+button:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 战斗区域布局 */
+.battle-area {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.player-info {
+    flex: 1;
+    background-color: #334155;
+    padding: 20px;
+    border: 3px solid #475569;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+.player1-info {
+    border-left: 5px solid #0984e3;
+}
+
+.player2-info {
+    border-right: 5px solid #d63031;
+}
+
+/* 玩家状态样式 */
+#player1-stats, #player2-stats {
+    font-size: 13px;
+    line-height: 1.8;
+    font-family: 'PixelFont', monospace;
+}
+
+#player1-stats p, #player2-stats p {
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+#player1-stats span, #player2-stats span {
+    font-weight: bold;
+}
+
+.player1-info span {
+    color: #74b9ff;
+}
+
+.player2-info span {
+    color: #ff7675;
+}
+
+/* 装备和状态区域 */
+#p1-equipment, #p2-equipment, #p1-status, #p2-status {
+    margin-top: 16px;
+    padding-left: 10px;
+}
+
+#p1-equipment div, #p2-equipment div, #p1-status div, #p2-status div {
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 2px solid #475569;
+}
+
+.player1-info #p1-equipment div {
+    background-color: rgba(9, 132, 227, 0.2);
+    border-color: #0984e3;
+}
+
+.player2-info #p2-equipment div {
+    background-color: rgba(214, 48, 49, 0.2);
+    border-color: #d63031;
+}
+
+/* 战斗结果区域 */
+.battle-result {
+    flex: 2;
+    background-color: #334155;
+    padding: 20px;
+    border: 3px solid #475569;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+#result-log {
+    flex-grow: 1;
+    height: 500px;
+    padding: 15px;
+    background-color: #1e293b;
+    color: #e2e2e2;
+    font-family: 'PixelFont', monospace;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    overflow-y: auto;
+    border: 3px solid #475569;
+}
+
+/* 自定义滚动条样式 - 像素风格 */
+#result-log::-webkit-scrollbar {
+    width: 16px;
+}
+
+#result-log::-webkit-scrollbar-track {
+    background: #334155;
+    border-left: 3px solid #475569;
+}
+
+#result-log::-webkit-scrollbar-thumb {
+    background: #475569;
+    border: 3px solid #334155;
+}
+
+#result-log::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* 滚动条美化 */
+#result-log::-webkit-scrollbar {
+    width: 10px;
+}
+
+#result-log::-webkit-scrollbar-track {
+    background: #1a202c;
+    border-radius: 10px;
+}
+
+#result-log::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 10px;
+}
+
+#result-log::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .battle-area {
+        flex-direction: column;
+    }
+
+    .player-info, .battle-result {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .player-form {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    #result-log {
+        height: 300px;
+    }
+}
