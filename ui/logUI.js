@@ -1,5 +1,33 @@
 // 战斗日志UI模块
 
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function highlightLine(line, players) {
+    const container = document.createElement('span');
+    container.textContent = line;
+    let processed = container.innerHTML;
+
+    players.forEach(({ name, color }) => {
+        if (!name) {
+            return;
+        }
+        const escapedName = escapeHtml(name);
+        const highlight = `<span style="color:${color};">${escapedName}</span>`;
+        const nameRegex = new RegExp(escapedName, 'g');
+        processed = processed.replace(nameRegex, highlight);
+    });
+
+    container.innerHTML = processed;
+    return container;
+}
+
 // 显示战斗日志
 function displayBattleLog(log, updatePlayerInfo, player1, player2) {
     const resultLog = document.getElementById('result-log');
@@ -8,35 +36,23 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
         return;
     }
 
-    // 清空战斗日志
-    resultLog.textContent = '';
-
-    // 拆分日志为行
     const logLines = log.split('\n');
+    const fragment = document.createDocumentFragment();
+    const players = [
+        { name: player1?.name, color: 'rgb(58, 109, 185)' },
+        { name: player2?.name, color: 'rgb(218, 64, 53)' }
+    ];
 
-    // 一次性显示所有日志行，为玩家名字添加颜色
     logLines.forEach(line => {
-        // 为玩家1和玩家2的名字添加不同颜色
-        let coloredLine = line;
-        if (player1 && player1.name) {
-            coloredLine = coloredLine.replace(
-                new RegExp(player1.name, 'g'),
-                `<span style="color:rgb(58, 109, 185);">${player1.name}</span>`
-            );
-        }
-        if (player2 && player2.name) {
-            coloredLine = coloredLine.replace(
-                new RegExp(player2.name, 'g'),
-                `<span style="color:rgb(218, 64, 53);">${player2.name}</span>`
-            );
-        }
-        resultLog.innerHTML += coloredLine + '<br>';
+        const lineElement = document.createElement('div');
+        lineElement.appendChild(highlightLine(line, players));
+        fragment.appendChild(lineElement);
     });
 
-    // 滚动到底部
+    resultLog.innerHTML = '';
+    resultLog.appendChild(fragment);
     resultLog.scrollTop = resultLog.scrollHeight;
 
-    // 更新玩家信息
     updatePlayerInfo(player1, true);
     updatePlayerInfo(player2, false);
 }
