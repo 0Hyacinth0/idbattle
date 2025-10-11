@@ -2,6 +2,93 @@
 
 const LOG_RENDER_INTERVAL = 0;
 
+let resizeListenerAttached = false;
+
+function parseCssValue(value) {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function calculateResultLogMetrics(resultLog) {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return { availableHeight: null, battleResult: null, maxPlayerHeight: null };
+    }
+
+    const battleResult = resultLog?.closest('.battle-result') ?? null;
+    const playerPanels = Array.from(document.querySelectorAll('.player-info'));
+
+    if (!resultLog || !battleResult || !playerPanels.length) {
+        return { availableHeight: null, battleResult, maxPlayerHeight: null };
+    }
+
+    const maxPlayerHeight = Math.max(
+        ...playerPanels.map((panel) => panel.offsetHeight || 0)
+    );
+
+    if (!Number.isFinite(maxPlayerHeight) || maxPlayerHeight <= 0) {
+        return { availableHeight: null, battleResult, maxPlayerHeight: null };
+    }
+
+    const battleResultStyles = window.getComputedStyle(battleResult);
+    const paddingTop = parseCssValue(battleResultStyles.paddingTop);
+    const paddingBottom = parseCssValue(battleResultStyles.paddingBottom);
+
+    const header = battleResult.querySelector('h2');
+    let headerSpace = 0;
+    if (header) {
+        const headerStyles = window.getComputedStyle(header);
+        headerSpace =
+            header.offsetHeight +
+            parseCssValue(headerStyles.marginTop) +
+            parseCssValue(headerStyles.marginBottom);
+    }
+
+    const availableHeight = Math.max(0, maxPlayerHeight - paddingTop - paddingBottom - headerSpace);
+
+    return { availableHeight, battleResult, maxPlayerHeight };
+}
+
+function syncResultLogHeight(resultLog) {
+    ensureResizeListener();
+
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+        return;
+    }
+
+    const target = resultLog || document.getElementById('result-log');
+
+    if (!target) {
+        return;
+    }
+
+    const { availableHeight, battleResult, maxPlayerHeight } = calculateResultLogMetrics(target);
+
+    if (!battleResult) {
+        target.style.maxHeight = '';
+        return;
+    }
+
+    if (availableHeight === null || maxPlayerHeight === null) {
+        target.style.maxHeight = '';
+        battleResult.style.removeProperty('max-height');
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        battleResult.style.maxHeight = `${maxPlayerHeight}px`;
+        target.style.maxHeight = `${availableHeight}px`;
+    });
+}
+
+function ensureResizeListener() {
+    if (resizeListenerAttached || typeof window === 'undefined') {
+        return;
+    }
+
+    window.addEventListener('resize', () => syncResultLogHeight());
+    resizeListenerAttached = true;
+}
+
 const ROUND_HEADER_REGEX = /^第\s*\d+\s*回合[:：]/;
 const SEPARATOR_REGEX = /^=+$/;
 
@@ -106,6 +193,7 @@ function processLogQueue(resultLog) {
     }
 
     resultLog.scrollTop = resultLog.scrollHeight;
+    syncResultLogHeight(resultLog);
 
     if (typeof state.updatePlayerInfo === 'function' && state.playerRefs) {
         const { player1, player2 } = state.playerRefs;
@@ -122,6 +210,8 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
         console.error('战斗日志DOM元素不存在');
         return;
     }
+
+    syncResultLogHeight(resultLog);
 
     const state = ensureLogState(resultLog);
     state.players = [
@@ -178,6 +268,8 @@ function resetBattleLog(initialMessage = '') {
         messageLine.textContent = initialMessage;
         resultLog.appendChild(messageLine);
     }
+
+    syncResultLogHeight(resultLog);
 }
 
 export { displayBattleLog, resetBattleLog };
