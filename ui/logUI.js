@@ -1,6 +1,6 @@
 // 战斗日志UI模块
 
-const LOG_RENDER_INTERVAL = 600;
+const LOG_RENDER_INTERVAL = 0;
 
 const ROUND_HEADER_REGEX = /^第\s*\d+\s*回合[:：]/;
 const SEPARATOR_REGEX = /^=+$/;
@@ -41,7 +41,9 @@ function ensureLogState(resultLog) {
             processing: false,
             timeoutId: null,
             players: [],
-            currentRoundBody: null
+            currentRoundBody: null,
+            playerRefs: null,
+            updatePlayerInfo: null
         };
     }
     return resultLog._logState;
@@ -105,6 +107,12 @@ function processLogQueue(resultLog) {
 
     resultLog.scrollTop = resultLog.scrollHeight;
 
+    if (typeof state.updatePlayerInfo === 'function' && state.playerRefs) {
+        const { player1, player2 } = state.playerRefs;
+        state.updatePlayerInfo(player1, true);
+        state.updatePlayerInfo(player2, false);
+    }
+
     state.timeoutId = window.setTimeout(() => processLogQueue(resultLog), LOG_RENDER_INTERVAL);
 }
 
@@ -120,12 +128,16 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
         { name: player1?.name, color: 'rgb(58, 109, 185)' },
         { name: player2?.name, color: 'rgb(218, 64, 53)' }
     ];
+    state.playerRefs = { player1, player2 };
+    state.updatePlayerInfo = updatePlayerInfo;
 
     const logLines = log.split('\n');
     const newLines = logLines.slice(state.renderedLines);
     if (!newLines.length) {
-        updatePlayerInfo(player1, true);
-        updatePlayerInfo(player2, false);
+        if (typeof updatePlayerInfo === 'function') {
+            updatePlayerInfo(player1, true);
+            updatePlayerInfo(player2, false);
+        }
         return;
     }
 
@@ -135,9 +147,6 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
     if (!state.processing) {
         processLogQueue(resultLog);
     }
-
-    updatePlayerInfo(player1, true);
-    updatePlayerInfo(player2, false);
 }
 
 function resetBattleLog(initialMessage = '') {
@@ -158,7 +167,9 @@ function resetBattleLog(initialMessage = '') {
         processing: false,
         timeoutId: null,
         players: [],
-        currentRoundBody: null
+        currentRoundBody: null,
+        playerRefs: null,
+        updatePlayerInfo: null
     };
 
     if (initialMessage) {
