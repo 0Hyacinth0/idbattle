@@ -189,8 +189,6 @@ function updatePlayerInfo(player, isPlayer1) {
     // 使用对象存储DOM元素引用，避免多次查询
     const elements = {
         name: document.getElementById(`${prefix}-name`),
-        health: document.getElementById(`${prefix}-health`),
-        maxHealth: document.getElementById(`${prefix}-max-health`),
         attack: document.getElementById(`${prefix}-attack`),
         defense: document.getElementById(`${prefix}-defense`),
         speed: document.getElementById(`${prefix}-speed`),
@@ -209,8 +207,6 @@ function updatePlayerInfo(player, isPlayer1) {
 
     // 更新基本属性（考虑临时效果）
     elements.name.textContent = player.name;
-    elements.health.textContent = formatNumericDisplay(player.health);
-    elements.maxHealth.textContent = formatNumericDisplay(player.maxHealth);
     updateHealthMeter(prefix, player.health, player.maxHealth);
 
     // 计算考虑临时效果后的实际属性值
@@ -316,8 +312,6 @@ function updatePlayerInfo(player, isPlayer1) {
 function initPlayerPanels() {
     // 玩家1
     document.getElementById('p1-name').textContent = '-';
-    document.getElementById('p1-health').textContent = '-';
-    document.getElementById('p1-max-health').textContent = '-';
     document.getElementById('p1-attack').textContent = '-';
     document.getElementById('p1-defense').textContent = '-';
     document.getElementById('p1-speed').textContent = '-';
@@ -328,8 +322,6 @@ function initPlayerPanels() {
 
     // 玩家2
     document.getElementById('p2-name').textContent = '-';
-    document.getElementById('p2-health').textContent = '-';
-    document.getElementById('p2-max-health').textContent = '-';
     document.getElementById('p2-attack').textContent = '-';
     document.getElementById('p2-defense').textContent = '-';
     document.getElementById('p2-speed').textContent = '-';

@@ -15,6 +15,14 @@
     --log-odd: #332a45;
     --log-even: #2a2338;
     --system-message: #ffe085;
+    --font-size-base: 1rem;
+    --font-size-small: 0.85rem;
+    --font-size-xs: 0.75rem;
+    --font-size-caption: 0.7rem;
+    --font-size-label: 0.8rem;
+    --font-size-heading: clamp(1.45rem, 2.8vw, 2.1rem);
+    --font-size-subheading: clamp(1.1rem, 2.2vw, 1.35rem);
+    --font-size-section: 0.95rem;
 }
 
 * {
@@ -32,6 +40,7 @@
 
 body {
     font-family: 'PixelFont', 'Press Start 2P', monospace;
+    font-size: var(--font-size-base);
     background-color: var(--bg-base);
     background-image:
         radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.08) 0, transparent 60%),
@@ -63,22 +72,22 @@ body {
     border: 3px solid var(--border-dark);
     padding: 6px 12px;
     text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: 2px;
+    font-size: var(--font-size-caption);
+    letter-spacing: 0.18rem;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
 }
 
 h1 {
     text-align: center;
-    font-size: 1.9rem;
-    letter-spacing: 4px;
+    font-size: var(--font-size-heading);
+    letter-spacing: 0.25rem;
     color: var(--accent-gold);
     text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
     margin-bottom: 28px;
 }
 
 h2 {
-    font-size: 1rem;
+    font-size: var(--font-size-subheading);
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -97,7 +106,7 @@ h2::before {
 }
 
 h3 {
-    font-size: 0.85rem;
+    font-size: var(--font-size-section);
     color: var(--accent-gold);
     margin: 16px 0 8px;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
@@ -121,15 +130,15 @@ h3 {
 }
 
 label {
-    font-size: 12px;
-    letter-spacing: 2px;
+    font-size: var(--font-size-label);
+    letter-spacing: 0.15rem;
     color: var(--text-muted);
 }
 
 input {
     width: 100%;
     padding: 12px;
-    font-size: 14px;
+    font-size: var(--font-size-small);
     font-family: inherit;
     color: var(--text-primary);
     background: #1b1626;
@@ -147,7 +156,7 @@ input:focus {
 
 button {
     padding: 14px 28px;
-    font-size: 14px;
+    font-size: var(--font-size-small);
     font-family: inherit;
     font-weight: bold;
     color: var(--border-dark);
@@ -184,7 +193,7 @@ button:disabled {
 .form-error {
     grid-column: 1 / -1;
     color: var(--accent-red);
-    font-size: 12px;
+    font-size: var(--font-size-label);
     text-align: center;
     min-height: 18px;
 }
@@ -229,17 +238,41 @@ button:disabled {
 .player-card__summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
+    gap: 12px;
     flex: 1 1 240px;
 }
 
 .summary-block {
     display: grid;
-    gap: 5px;
-    padding: 8px 10px;
+    gap: 6px;
+    padding: 10px 12px;
     background: #221c32;
     border: 3px solid var(--border-dark);
     min-width: 140px;
+}
+
+.summary-block--name {
+    align-content: start;
+}
+
+.summary-block--name .summary-value {
+    font-size: calc(var(--font-size-small) + 0.05rem);
+}
+
+.summary-block--name .summary-health {
+    margin-top: 2px;
+    display: block;
+}
+
+.summary-block--name .health-meter {
+    margin-top: 4px;
+    padding: 8px 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+}
+
+.summary-block--name .health-meter__track {
+    height: 14px;
 }
 
 .player1-info .summary-block {
@@ -251,39 +284,16 @@ button:disabled {
 }
 
 .summary-label {
-    font-size: 10px;
-    letter-spacing: 1px;
+    font-size: var(--font-size-caption);
+    letter-spacing: 0.08rem;
     color: var(--text-muted);
 }
 
 .summary-value {
-    font-size: 12px;
+    font-size: var(--font-size-small);
     font-weight: bold;
     word-break: break-word;
     line-height: 1.3;
-}
-
-.player-card__health {
-    display: grid;
-    gap: 10px;
-}
-
-.health-readout {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #221c32;
-    border: 3px solid var(--border-dark);
-    padding: 8px 10px;
-    font-size: 11px;
-}
-
-.player1-info .health-readout {
-    border-color: var(--accent-blue-dark);
-}
-
-.player2-info .health-readout {
-    border-color: var(--accent-red);
 }
 
 .player-card__stats-grid {
@@ -309,13 +319,13 @@ button:disabled {
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: var(--font-size-caption);
     color: var(--text-muted);
-    letter-spacing: 1px;
+    letter-spacing: 0.08rem;
 }
 
 .stat-value {
-    font-size: 14px;
+    font-size: calc(var(--font-size-base) + 0.05rem);
     font-weight: bold;
 }
 
@@ -340,7 +350,7 @@ button:disabled {
     border: 3px solid var(--border-dark);
     padding: 8px 10px;
     line-height: 1.4;
-    font-size: 0.75rem;
+    font-size: var(--font-size-small);
     position: relative;
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
@@ -361,12 +371,12 @@ button:disabled {
 }
 
 .status-item {
-    font-size: 0.72rem;
-    letter-spacing: 0.5px;
+    font-size: var(--font-size-small);
+    letter-spacing: 0.05rem;
 }
 
 .set-effect-entry {
-    font-size: 0.78rem;
+    font-size: calc(var(--font-size-small) + 0.05rem);
     border-style: dashed;
     font-weight: 600;
 }
@@ -396,15 +406,15 @@ button:disabled {
 }
 
 .equipment-slot {
-    font-size: 0.65rem;
+    font-size: var(--font-size-caption);
     color: var(--text-muted);
-    letter-spacing: 1px;
+    letter-spacing: 0.08rem;
     flex-shrink: 0;
 }
 
 .equipment-name {
     flex: 1;
-    font-size: 0.78rem;
+    font-size: var(--font-size-small);
     font-weight: 600;
     line-height: 1.3;
 }
@@ -453,19 +463,19 @@ button:disabled {
 }
 
 .equipment-tooltip__name {
-    font-size: 0.78rem;
+    font-size: calc(var(--font-size-small) + 0.05rem);
     font-weight: 600;
     margin-bottom: 6px;
 }
 
 .equipment-tooltip__rarity {
-    font-size: 0.7rem;
+    font-size: var(--font-size-xs);
     margin-bottom: 6px;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
 }
 
 .equipment-tooltip__meta {
-    font-size: 0.68rem;
+    font-size: var(--font-size-caption);
     color: var(--text-muted);
     display: grid;
     gap: 4px;
@@ -477,7 +487,7 @@ button:disabled {
     border-top: 1px dashed rgba(255, 255, 255, 0.15);
     display: grid;
     gap: 4px;
-    font-size: 0.68rem;
+    font-size: var(--font-size-caption);
 }
 
 .equipment-tooltip__empty {
@@ -487,17 +497,17 @@ button:disabled {
 
 .health-meter {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
     background: #1f1a2b;
-    border: 4px solid var(--border-dark);
+    border: 3px solid var(--border-dark);
 }
 
 .health-meter__track {
     position: relative;
-    height: 16px;
+    height: 14px;
     border: 3px solid var(--border-dark);
     background: #0f0d16;
     overflow: hidden;
@@ -510,9 +520,9 @@ button:disabled {
 }
 
 .health-meter__value {
-    font-size: 11px;
+    font-size: var(--font-size-label);
     font-weight: bold;
-    min-width: 68px;
+    min-width: 60px;
     text-align: right;
 }
 
@@ -547,7 +557,7 @@ button:disabled {
     border: 4px solid var(--border-dark);
     padding: 16px 18px;
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: var(--font-size-small);
     line-height: 1.5;
     overflow-y: auto;
 }
@@ -578,7 +588,7 @@ button:disabled {
     padding: 10px 12px;
     border-bottom: 3px solid var(--border-dark);
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 0.08rem;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.55);
 }
 
@@ -630,7 +640,7 @@ button:disabled {
 
 @media (max-width: 720px) {
     h1 {
-        font-size: 1.5rem;
+        font-size: clamp(1.3rem, 6vw, 1.5rem);
     }
 
     button {
