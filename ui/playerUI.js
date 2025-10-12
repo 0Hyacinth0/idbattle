@@ -1,6 +1,37 @@
 // 玩家UI模块
 import { updateHealthMeter, resetHealthMeter } from './healthBar.js';
 
+// 统一格式化数值展示，避免出现过多小数位
+function formatNumericDisplay(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+        return value;
+    }
+
+    const rounded = Math.round(value * 10) / 10;
+    const normalized = Math.abs(rounded) < 0.0001 ? 0 : rounded;
+
+    if (Number.isInteger(normalized)) {
+        return normalized.toString();
+    }
+
+    return normalized.toFixed(1).replace(/\.0$/, '');
+}
+
+function formatEquipmentProperty(name, value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+        return '';
+    }
+
+    const rounded = Math.round(value * 10) / 10;
+    if (Math.abs(rounded) < 0.05) {
+        return '';
+    }
+
+    const sign = rounded > 0 ? '+' : '-';
+    const magnitude = formatNumericDisplay(Math.abs(rounded));
+    return `${name}${sign}${magnitude}`;
+}
+
 // 更新玩家信息显示
 function updatePlayerInfo(player, isPlayer1) {
     const prefix = isPlayer1 ? 'p1' : 'p2';
@@ -31,8 +62,8 @@ function updatePlayerInfo(player, isPlayer1) {
 
     // 更新基本属性（考虑临时效果）
     elements.name.textContent = player.name;
-    elements.health.textContent = player.health;
-    elements.maxHealth.textContent = player.maxHealth;
+    elements.health.textContent = formatNumericDisplay(player.health);
+    elements.maxHealth.textContent = formatNumericDisplay(player.maxHealth);
     updateHealthMeter(prefix, player.health, player.maxHealth);
 
     // 计算考虑临时效果后的实际属性值
@@ -62,9 +93,9 @@ function updatePlayerInfo(player, isPlayer1) {
     }
 
     // 更新UI显示，添加颜色区分临时效果
-    elements.attack.textContent = actualAttack;
-    elements.defense.textContent = actualDefense;
-    elements.speed.textContent = actualSpeed;
+    elements.attack.textContent = formatNumericDisplay(actualAttack);
+    elements.defense.textContent = formatNumericDisplay(actualDefense);
+    elements.speed.textContent = formatNumericDisplay(actualSpeed);
 
     // 如果有临时效果，改变显示颜色
     elements.attack.style.color = (player.attackBoostDuration > 0 || player.attackReductionDuration > 0) ? '#FF9800' : '';
@@ -84,9 +115,7 @@ function updatePlayerInfo(player, isPlayer1) {
 
     // 格式化属性显示的辅助函数
     function formatProperty(name, value) {
-        if (value === 0) return '';
-        if (value > 0) return `${name}+${value}`;
-        return `${name}${value}`; // 负数自动带负号
+        return formatEquipmentProperty(name, value) || '';
     }
 
     // 更新装备信息 - 使用DocumentFragment减少重排
