@@ -95,26 +95,20 @@ function updatePlayerInfo(player, isPlayer1) {
     if (player.equipment) {
         Object.entries(player.equipment).forEach(([type, item]) => {
             const equipmentDiv = document.createElement('div');
-            // 找到装备名称（通过属性匹配，而不是引用比较）
-            const equipmentName = Object.keys(window.equipmentList || {}).find(key => 
-                window.equipmentList[key].type === item.type &&
-                window.equipmentList[key].attack === item.attack &&
-                window.equipmentList[key].defense === item.defense &&
-                window.equipmentList[key].health === item.health &&
-                window.equipmentList[key].speed === item.speed &&
-                window.equipmentList[key].套装 === item.套装
-            ) || '未知装备';
-
-            // 格式化各个属性
-            const attackStr = formatProperty('攻击', item.attack);
-            const defenseStr = formatProperty('防御', item.defense);
-            const healthStr = formatProperty('生命', item.health);
-            const speedStr = formatProperty('速度', item.speed);
-
-            // 过滤掉空字符串并连接属性
+            const attributes = item.attributes || {};
+            const attackStr = formatProperty('攻击', attributes.attack || 0);
+            const defenseStr = formatProperty('防御', attributes.defense || 0);
+            const healthStr = formatProperty('生命', attributes.health || 0);
+            const speedStr = formatProperty('速度', attributes.speed || 0);
             const properties = [attackStr, defenseStr, healthStr, speedStr].filter(Boolean).join(', ');
 
-            equipmentDiv.textContent = `${type}: ${equipmentName} (${properties})`;
+            const meta = [];
+            if (item.quality) meta.push(`品质: ${item.quality}`);
+            if (typeof item.enhancementLevel === 'number') meta.push(`强化+${item.enhancementLevel}`);
+            if (item.set) meta.push(`套装: ${item.set}`);
+
+            const metaInfo = meta.length > 0 ? `【${meta.join(' / ')}】` : '';
+            equipmentDiv.textContent = `${type}: ${item.name || '未知装备'} ${metaInfo} (${properties || '无属性变化'})`;
             equipmentFragment.appendChild(equipmentDiv);
         });
     }

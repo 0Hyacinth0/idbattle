@@ -1,79 +1,81 @@
 import { setEffects } from '../models/equipment.js';
+import { validateAttributes } from '../utils/validation.js';
 
-// 计算套装效果（2件部分效果，4件全部效果）
 function calculateSetEffects(equipment) {
     const setCounts = new Map();
     let effects = {};
 
-    // 统计每种套装的装备数量
-    for (const item of Object.values(equipment)) {
-        if (item.套装) {
-            setCounts.set(item.套装, (setCounts.get(item.套装) || 0) + 1);
+    Object.values(equipment).forEach(item => {
+        if (item && item.set) {
+            setCounts.set(item.set, (setCounts.get(item.set) || 0) + 1);
         }
-    }
+    });
 
-    // 应用套装效果
     for (const [setName, count] of setCounts) {
-        if (setEffects[setName]) {
-            // 确定适用的套装等级
-            let effectLevel = 0;
-            if (count >= 4) {
-                effectLevel = 4;
-            } else if (count >= 2) {
-                effectLevel = 2;
-            }
+        const effectConfig = setEffects[setName];
+        if (!effectConfig) continue;
 
-            // 应用对应等级的效果
-            if (effectLevel > 0 && setEffects[setName][effectLevel]) {
-                effects = {...effects, ...setEffects[setName][effectLevel]};
-                effects.activeSet = setName;
-                effects.setCount = count;
-                effects.effectLevel = effectLevel;
-            }
+        let effectLevel = 0;
+        if (count >= 4) {
+            effectLevel = 4;
+        } else if (count >= 2) {
+            effectLevel = 2;
+        }
+
+        if (effectLevel > 0 && effectConfig[effectLevel]) {
+            effects = { ...effects, ...effectConfig[effectLevel], activeSet: setName, setCount: count, effectLevel };
         }
     }
 
     return effects;
 }
 
-// 应用装备属性
 function applyEquipmentAttributes(player, equipment) {
-    // 初始属性
-    let attack = player.attack;
-    let defense = player.defense;
-    let health = player.health;
-    let speed = player.speed;
+    const aggregated = {
+        attack: player.attack ?? 0,
+        defense: player.defense ?? 0,
+        health: player.health ?? 0,
+        speed: player.speed ?? 0,
+        critChance: player.critChance ?? 0,
+        parryChance: player.parryChance ?? 0,
+        shield: player.shield ?? 0
+    };
 
-    // 应用每件装备的属性
     Object.values(equipment).forEach(item => {
-        attack += item.attack;
-        defense += item.defense;
-        health += item.health;
-        speed += item.speed;
+        if (!item || !item.attributes) {
+            return;
+        }
+        Object.entries(item.attributes).forEach(([key, value]) => {
+            if (typeof value === 'number') {
+                aggregated[key] = (aggregated[key] || 0) + value;
+            }
+        });
     });
 
-    // 应用套装效果
     const setEffectsResult = calculateSetEffects(equipment);
-    if (setEffectsResult.attackMultiplier) attack *= setEffectsResult.attackMultiplier;
-    if (setEffectsResult.defenseMultiplier) defense *= setEffectsResult.defenseMultiplier;
-    if (setEffectsResult.healthMultiplier) health *= setEffectsResult.healthMultiplier;
-    if (setEffectsResult.speedMultiplier) speed *= setEffectsResult.speedMultiplier;
+    if (setEffectsResult.attackMultiplier) aggregated.attack *= setEffectsResult.attackMultiplier;
+    if (setEffectsResult.defenseMultiplier) aggregated.defense *= setEffectsResult.defenseMultiplier;
+    if (setEffectsResult.healthMultiplier) aggregated.health *= setEffectsResult.healthMultiplier;
+    if (setEffectsResult.speedMultiplier) aggregated.speed *= setEffectsResult.speedMultiplier;
+    if (setEffectsResult.critChance) aggregated.critChance = (aggregated.critChance || 0) + setEffectsResult.critChance;
+    if (setEffectsResult.parryChance) aggregated.parryChance = (aggregated.parryChance || 0) + setEffectsResult.parryChance;
 
-    // 确保属性不为负
-    attack = Math.max(attack, 1);
-    defense = Math.max(defense, 0);
-    health = Math.max(health, 1);
-    speed = Math.max(speed, 1);
+    const { sanitized, adjustments } = validateAttributes(aggregated);
 
     return {
         ...player,
-        attack: Math.floor(attack),
-        defense: Math.floor(defense),
-        health: Math.floor(health),
-        maxHealth: Math.floor(health),
-        speed: Math.floor(speed),
+        ...sanitized,
+        health: Math.floor(sanitized.health),
+        maxHealth: Math.floor(sanitized.health),
+        attack: Math.floor(sanitized.attack),
+        defense: Math.floor(sanitized.defense),
+        speed: Math.floor(sanitized.speed),
+        shield: sanitized.shield,
+        critChance: sanitized.critChance,
+        parryChance: sanitized.parryChance,
         equipment,
-        setEffects: setEffectsResult
+        setEffects: setEffectsResult,
+        validationAdjustments: adjustments
     };
 }
 
