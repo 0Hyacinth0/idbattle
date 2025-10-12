@@ -7,7 +7,7 @@ import url from 'node:url';
 const HOST = process.env.HOST ?? '0.0.0.0';
 const PORT = Number.parseInt(process.env.PORT ?? '4173', 10);
 
-const rootDir = path.resolve(path.dirname(url.fileURLToPath(new URL('..', import.meta.url))));
+const rootDir = path.resolve(url.fileURLToPath(new URL('../', import.meta.url)));
 
 const MIME_TYPES = new Map([
   ['.html', 'text/html; charset=UTF-8'],
