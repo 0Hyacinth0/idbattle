@@ -213,21 +213,140 @@ button:disabled {
     border-color: var(--accent-red);
 }
 
-#player1-stats,
-#player2-stats {
+.player-card {
     display: grid;
-    gap: 10px;
-    font-size: 12px;
-    line-height: 1.6;
+    gap: 18px;
 }
 
-#player1-stats p,
-#player2-stats p {
+.player-card__header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.player-card__summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    flex: 1 1 240px;
+}
+
+.summary-block {
+    display: grid;
+    gap: 6px;
+    padding: 10px 12px;
+    background: #221c32;
+    border: 3px solid var(--border-dark);
+    min-width: 140px;
+}
+
+.player1-info .summary-block {
+    border-color: var(--accent-blue-dark);
+}
+
+.player2-info .summary-block {
+    border-color: var(--accent-red);
+}
+
+.summary-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.summary-value {
+    font-size: 14px;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.player-card__health {
+    display: grid;
+    gap: 12px;
+}
+
+.health-readout {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    background: #221c32;
+    border: 3px solid var(--border-dark);
+    padding: 10px 12px;
+    font-size: 12px;
+}
+
+.player1-info .health-readout {
+    border-color: var(--accent-blue-dark);
+}
+
+.player2-info .health-readout {
+    border-color: var(--accent-red);
+}
+
+.player-card__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.stat-tile {
+    display: grid;
+    gap: 6px;
+    background: #221c32;
+    border: 3px solid var(--border-dark);
+    padding: 10px 12px;
+}
+
+.player1-info .stat-tile {
+    border-color: var(--accent-blue-dark);
+}
+
+.player2-info .stat-tile {
+    border-color: var(--accent-red);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.player-card__detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.detail-section h3 {
+    margin-top: 0;
+}
+
+.detail-list {
+    margin-top: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.detail-list div {
     background: #221c32;
     border: 3px solid var(--border-dark);
     padding: 8px 10px;
+    line-height: 1.5;
+}
+
+.player1-info .detail-list div {
+    border-color: var(--accent-blue-dark);
+}
+
+.player2-info .detail-list div {
+    border-color: var(--accent-red);
 }
 
 .health-meter {
@@ -273,33 +392,6 @@ button:disabled {
     background: var(--accent-blue);
 }
 
-#p1-equipment,
-#p2-equipment,
-#p1-status,
-#p2-status {
-    margin-top: 16px;
-    display: grid;
-    gap: 8px;
-}
-
-#p1-equipment div,
-#p2-equipment div,
-#p1-status div,
-#p2-status div {
-    background: #221c32;
-    border: 3px solid var(--border-dark);
-    padding: 8px 10px;
-}
-
-.player1-info #p1-equipment div,
-.player1-info #p1-status div {
-    border-color: var(--accent-blue-dark);
-}
-
-.player2-info #p2-equipment div,
-.player2-info #p2-status div {
-    border-color: var(--accent-red);
-}
 
 .battle-result {
     flex: 2 1 320px;
