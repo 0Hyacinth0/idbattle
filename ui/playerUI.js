@@ -32,6 +32,17 @@ function formatEquipmentProperty(name, value) {
     return `${name}${sign}${magnitude}`;
 }
 
+function renderEmptyMessage(container, message) {
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+    const placeholder = document.createElement('div');
+    placeholder.textContent = message;
+    container.appendChild(placeholder);
+}
+
 // 更新玩家信息显示
 function updatePlayerInfo(player, isPlayer1) {
     const prefix = isPlayer1 ? 'p1' : 'p2';
@@ -102,13 +113,9 @@ function updatePlayerInfo(player, isPlayer1) {
     elements.defense.style.color = (player.defenseBoostDuration > 0 || player.attackBoostDuration > 0) ? '#FF9800' : '';
     elements.speed.style.color = player.speedBoostDuration > 0 ? '#FF9800' : '';
 
-    // 重命名UI显示为加速 - 添加data属性避免重复更新
-    if (elements.speed && elements.speed.parentElement) {
-        const parentElement = elements.speed.parentElement;
-        if (!parentElement.dataset.speedLabelUpdated) {
-            parentElement.innerHTML = parentElement.innerHTML.replace(/^.*?:/, '加速:');
-            parentElement.dataset.speedLabelUpdated = 'true';
-        }
+    const speedLabel = document.querySelector(`[data-speed-label="${prefix}"]`);
+    if (speedLabel) {
+        speedLabel.textContent = '加速';
     }
 
     elements.skill.textContent = `${player.skill.name} (${player.skill.description})`;
@@ -133,7 +140,7 @@ function updatePlayerInfo(player, isPlayer1) {
 
             const meta = [];
             if (item.quality) meta.push(`品质: ${item.quality}`);
-            if (typeof item.enhancementLevel === 'number') meta.push(`强化+${item.enhancementLevel}`);
+            if (typeof item.enhancementLevel === 'number') meta.push(`精炼+${item.enhancementLevel}`);
             if (item.set) meta.push(`套装: ${item.set}`);
 
             const metaInfo = meta.length > 0 ? `【${meta.join(' / ')}】` : '';
@@ -152,7 +159,11 @@ function updatePlayerInfo(player, isPlayer1) {
 
     // 一次性更新装备DOM
     elements.equipment.innerHTML = '';
-    elements.equipment.appendChild(equipmentFragment);
+    if (equipmentFragment.childNodes.length > 0) {
+        elements.equipment.appendChild(equipmentFragment);
+    } else {
+        renderEmptyMessage(elements.equipment, '暂无装备');
+    }
 
     // 更新状态效果 - 使用DocumentFragment减少重排
     const statusEffects = [];
@@ -175,7 +186,7 @@ function updatePlayerInfo(player, isPlayer1) {
         elements.status.innerHTML = '';
         elements.status.appendChild(statusFragment);
     } else {
-        elements.status.textContent = '无特殊状态';
+        renderEmptyMessage(elements.status, '无特殊状态');
     }
 }
 
@@ -189,8 +200,8 @@ function initPlayerPanels() {
     document.getElementById('p1-defense').textContent = '-';
     document.getElementById('p1-speed').textContent = '-';
     document.getElementById('p1-skill').textContent = '-';
-    document.getElementById('p1-equipment').innerHTML = '';
-    document.getElementById('p1-status').textContent = '无特殊状态';
+    renderEmptyMessage(document.getElementById('p1-equipment'), '暂无装备');
+    renderEmptyMessage(document.getElementById('p1-status'), '无特殊状态');
     resetHealthMeter('p1');
 
     // 玩家2
@@ -201,8 +212,8 @@ function initPlayerPanels() {
     document.getElementById('p2-defense').textContent = '-';
     document.getElementById('p2-speed').textContent = '-';
     document.getElementById('p2-skill').textContent = '-';
-    document.getElementById('p2-equipment').innerHTML = '';
-    document.getElementById('p2-status').textContent = '无特殊状态';
+    renderEmptyMessage(document.getElementById('p2-equipment'), '暂无装备');
+    renderEmptyMessage(document.getElementById('p2-status'), '无特殊状态');
     resetHealthMeter('p2');
 }
 
