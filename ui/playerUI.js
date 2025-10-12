@@ -93,9 +93,17 @@ function buildEquipmentTooltip(type, item) {
     slotLabel.textContent = type;
     header.appendChild(slotLabel);
 
+    const formatEquipmentName = (equipment) => {
+        const baseName = (equipment && equipment.name) ? equipment.name : '未知装备';
+        if (equipment && typeof equipment.enhancementLevel === 'number') {
+            return `${baseName} +${equipment.enhancementLevel}`;
+        }
+        return baseName;
+    };
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'equipment-name';
-    nameSpan.textContent = item.name || '未知装备';
+    nameSpan.textContent = formatEquipmentName(item);
     header.appendChild(nameSpan);
 
     const rarityStyle = getRarityStyle(item.quality);
@@ -114,10 +122,12 @@ function buildEquipmentTooltip(type, item) {
 
     const tooltipName = document.createElement('div');
     tooltipName.className = 'equipment-tooltip__name';
-    tooltipName.textContent = item.name || '未知装备';
+    tooltipName.textContent = formatEquipmentName(item);
     tooltip.appendChild(tooltipName);
 
     if (rarityStyle) {
+        nameSpan.style.color = rarityStyle.color;
+        tooltipName.style.color = rarityStyle.color;
         const rarityLine = createTooltipLine(`稀有度：${rarityStyle.label}`, 'equipment-tooltip__rarity');
         rarityLine.style.color = rarityStyle.color;
         tooltip.appendChild(rarityLine);
