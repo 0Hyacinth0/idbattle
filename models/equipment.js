@@ -16,8 +16,19 @@ const QUALITY_MULTIPLIERS = {
     common: 1
 };
 
+const MAX_ENHANCEMENT_LEVEL = 6;
+
+function normalizeEnhancementLevel(level) {
+    if (typeof level !== 'number' || Number.isNaN(level)) {
+        return 0;
+    }
+
+    return Math.min(Math.max(Math.floor(level), 0), MAX_ENHANCEMENT_LEVEL);
+}
+
 function calculateAttributeWithEnhancement(attributes, quality, enhancementLevel) {
-    const multiplier = (QUALITY_MULTIPLIERS[quality] || 1) * (1 + enhancementLevel * 0.05);
+    const normalizedEnhancement = normalizeEnhancementLevel(enhancementLevel);
+    const multiplier = (QUALITY_MULTIPLIERS[quality] || 1) * (1 + normalizedEnhancement * 0.05);
     return Object.fromEntries(
         Object.entries(attributes).map(([key, value]) => [key, typeof value === 'number' ? value * multiplier : value])
     );
@@ -32,14 +43,15 @@ for (const item of equipmentConfig) {
         continue;
     }
 
-    const normalizedAttributes = calculateAttributeWithEnhancement(item.attributes, item.quality, item.enhancementLevel);
+    const normalizedEnhancementLevel = normalizeEnhancementLevel(item.enhancementLevel);
+    const normalizedAttributes = calculateAttributeWithEnhancement(item.attributes, item.quality, normalizedEnhancementLevel);
     const equipmentItem = {
         name: item.name,
         type,
         typeKey: item.typeKey,
         set: item.set,
         quality: item.quality,
-        enhancementLevel: item.enhancementLevel,
+        enhancementLevel: normalizedEnhancementLevel,
         attributes: normalizedAttributes
     };
 
