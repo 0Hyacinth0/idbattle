@@ -32,6 +32,141 @@ function formatEquipmentProperty(name, value) {
     return `${name}${sign}${magnitude}`;
 }
 
+const ATTRIBUTE_LABELS = {
+    attack: '攻击',
+    defense: '防御',
+    health: '生命',
+    speed: '速度',
+    critChance: '会心',
+    critDamage: '会心伤害',
+    parryChance: '招架',
+    dodge: '闪避',
+    block: '格挡',
+    lifeSteal: '吸血',
+    resilience: '韧性'
+};
+
+const RARITY_STYLES = {
+    '破败': { color: '#8f93a3', label: '破败' },
+    poor: { color: '#8f93a3', label: '破败' },
+    '普通': { color: '#f4f1ff', label: '普通' },
+    common: { color: '#f4f1ff', label: '普通' },
+    '精巧': { color: '#6dd39e', label: '精巧' },
+    uncommon: { color: '#6dd39e', label: '精巧' },
+    '卓越': { color: '#59a6ff', label: '卓越' },
+    rare: { color: '#59a6ff', label: '卓越' },
+    '珍奇': { color: '#c282ff', label: '珍奇' },
+    epic: { color: '#c282ff', label: '珍奇' },
+    '稀世': { color: '#ff9b52', label: '稀世' },
+    legendary: { color: '#ff9b52', label: '稀世' }
+};
+
+function getRarityStyle(quality) {
+    if (!quality) {
+        return null;
+    }
+
+    const trimmed = `${quality}`.trim();
+    const lowerCase = trimmed.toLowerCase();
+    return RARITY_STYLES[trimmed] || RARITY_STYLES[lowerCase] || null;
+}
+
+function createTooltipLine(text, className) {
+    const line = document.createElement('span');
+    if (className) {
+        line.className = className;
+    }
+    line.textContent = text;
+    return line;
+}
+
+function buildEquipmentTooltip(type, item) {
+    const equipmentDiv = document.createElement('div');
+    equipmentDiv.className = 'detail-entry equipment-item';
+    equipmentDiv.tabIndex = 0;
+
+    const header = document.createElement('div');
+    header.className = 'equipment-item__header';
+
+    const slotLabel = document.createElement('span');
+    slotLabel.className = 'equipment-slot';
+    slotLabel.textContent = type;
+    header.appendChild(slotLabel);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'equipment-name';
+    nameSpan.textContent = item.name || '未知装备';
+    header.appendChild(nameSpan);
+
+    const rarityStyle = getRarityStyle(item.quality);
+    if (rarityStyle) {
+        const rarityChip = document.createElement('span');
+        rarityChip.className = 'equipment-rarity-chip';
+        rarityChip.style.setProperty('--rarity-color', rarityStyle.color);
+        rarityChip.setAttribute('aria-hidden', 'true');
+        header.appendChild(rarityChip);
+    }
+
+    equipmentDiv.appendChild(header);
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'equipment-tooltip';
+
+    const tooltipName = document.createElement('div');
+    tooltipName.className = 'equipment-tooltip__name';
+    tooltipName.textContent = item.name || '未知装备';
+    tooltip.appendChild(tooltipName);
+
+    if (rarityStyle) {
+        const rarityLine = createTooltipLine(`稀有度：${rarityStyle.label}`, 'equipment-tooltip__rarity');
+        rarityLine.style.color = rarityStyle.color;
+        tooltip.appendChild(rarityLine);
+    }
+
+    const metaInfo = [];
+    if (typeof item.enhancementLevel === 'number') {
+        metaInfo.push(`精炼 +${item.enhancementLevel}`);
+    }
+    if (item.set) {
+        metaInfo.push(`套装：${item.set}`);
+    }
+
+    if (metaInfo.length > 0) {
+        const metaContainer = document.createElement('div');
+        metaContainer.className = 'equipment-tooltip__meta';
+        metaInfo.forEach(info => {
+            metaContainer.appendChild(createTooltipLine(info));
+        });
+        tooltip.appendChild(metaContainer);
+    }
+
+    const attributes = item.attributes || {};
+    const formattedAttributes = Object.entries(attributes).reduce((result, [key, value]) => {
+        const label = ATTRIBUTE_LABELS[key] || key;
+        const formatted = formatEquipmentProperty(label, value);
+        if (formatted) {
+            result.push(formatted);
+        }
+        return result;
+    }, []);
+
+    const statsContainer = document.createElement('div');
+    statsContainer.className = 'equipment-tooltip__stats';
+
+    if (formattedAttributes.length > 0) {
+        formattedAttributes.forEach(text => {
+            statsContainer.appendChild(createTooltipLine(text));
+        });
+    } else {
+        statsContainer.appendChild(createTooltipLine('无额外属性', 'equipment-tooltip__empty'));
+    }
+
+    tooltip.appendChild(statsContainer);
+    equipmentDiv.appendChild(tooltip);
+
+    return equipmentDiv;
+}
+
 function renderEmptyMessage(container, message) {
     if (!container) {
         return;
@@ -39,6 +174,7 @@ function renderEmptyMessage(container, message) {
 
     container.innerHTML = '';
     const placeholder = document.createElement('div');
+    placeholder.className = 'detail-entry detail-placeholder';
     placeholder.textContent = message;
     container.appendChild(placeholder);
 }
@@ -120,40 +256,25 @@ function updatePlayerInfo(player, isPlayer1) {
 
     elements.skill.textContent = `${player.skill.name} (${player.skill.description})`;
 
-    // 格式化属性显示的辅助函数
-    function formatProperty(name, value) {
-        return formatEquipmentProperty(name, value) || '';
-    }
-
     // 更新装备信息 - 使用DocumentFragment减少重排
     const equipmentFragment = document.createDocumentFragment();
 
     if (player.equipment) {
         Object.entries(player.equipment).forEach(([type, item]) => {
-            const equipmentDiv = document.createElement('div');
-            const attributes = item.attributes || {};
-            const attackStr = formatProperty('攻击', attributes.attack || 0);
-            const defenseStr = formatProperty('防御', attributes.defense || 0);
-            const healthStr = formatProperty('生命', attributes.health || 0);
-            const speedStr = formatProperty('速度', attributes.speed || 0);
-            const properties = [attackStr, defenseStr, healthStr, speedStr].filter(Boolean).join(', ');
+            if (!item) {
+                return;
+            }
 
-            const meta = [];
-            if (item.quality) meta.push(`品质: ${item.quality}`);
-            if (typeof item.enhancementLevel === 'number') meta.push(`精炼+${item.enhancementLevel}`);
-            if (item.set) meta.push(`套装: ${item.set}`);
-
-            const metaInfo = meta.length > 0 ? `【${meta.join(' / ')}】` : '';
-            equipmentDiv.textContent = `${type}: ${item.name || '未知装备'} ${metaInfo} (${properties || '无属性变化'})`;
-            equipmentFragment.appendChild(equipmentDiv);
+            const equipmentEntry = buildEquipmentTooltip(type, item);
+            equipmentFragment.appendChild(equipmentEntry);
         });
     }
 
     // 更新套装效果
     if (player.setEffects && player.setEffects.activeSet) {
         const setEffectDiv = document.createElement('div');
-        setEffectDiv.textContent = `套装: ${player.setEffects.description} (装备了${player.setEffects.setCount}件)`;
-        setEffectDiv.style.fontWeight = 'bold';
+        setEffectDiv.className = 'detail-entry set-effect-entry';
+        setEffectDiv.textContent = `套装：${player.setEffects.description} (装备了${player.setEffects.setCount}件)`;
         equipmentFragment.appendChild(setEffectDiv);
     }
 
@@ -180,6 +301,7 @@ function updatePlayerInfo(player, isPlayer1) {
     if (statusEffects.length > 0) {
         statusEffects.forEach(effect => {
             const effectDiv = document.createElement('div');
+            effectDiv.className = 'detail-entry status-item';
             effectDiv.textContent = effect;
             statusFragment.appendChild(effectDiv);
         });
