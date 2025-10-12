@@ -5,7 +5,7 @@ import path from 'node:path';
 import url from 'node:url';
 
 const HOST = process.env.HOST ?? '0.0.0.0';
-const PORT = Number.parseInt(process.env.PORT ?? '4173', 10);
+const PORT = Number.parseInt(process.env.PORT ?? '8000', 10);
 
 const rootDir = path.resolve(url.fileURLToPath(new URL('../', import.meta.url)));
 
