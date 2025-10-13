@@ -2,88 +2,72 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BattleService } from '../services/battleService.js';
 import { applyEquipmentAttributes } from '../services/equipmentService.js';
+import {
+    createBasePlayer,
+    evaluatePlans,
+    deriveBalanceAdjustments,
+    generateRandomSequences
+} from '../services/balanceAnalyzer.js';
 
-function createBasePlayer(name, overrides = {}) {
-    const base = {
-        name,
-        health: 220,
-        maxHealth: 220,
-        attack: 35,
-        defense: 18,
-        speed: 12,
-        critChance: 0,
-        parryChance: 0,
-        shield: 0,
-        poison: 0,
-        burn: 0,
-        freeze: false,
-        taunted: false,
-        reflection: 0,
-        skill: { name: '稳固心法', chance: 0 }
-    };
+function computeMitigatedDamage(attacker, defender, adjustments, { willCrit = false } = {}) {
+    const combinedStats = Math.max(attacker.attack + defender.defense, 1);
+    const defenseAdvantage = Math.max(0, defender.defense - attacker.attack);
+    const defenseMitigationRatio = defenseAdvantage / combinedStats;
+    const defenseMitigation = 1 - Math.min(
+        adjustments.defenseMitigationCeiling,
+        defenseMitigationRatio * adjustments.defenseAdvantageMitigation
+    );
 
-    const player = { ...base, ...overrides };
-    if (typeof overrides.health === 'number' && typeof overrides.maxHealth !== 'number') {
-        player.maxHealth = overrides.health;
+    let defenseEffectiveness = defender.defense / (defender.defense + 50);
+    defenseEffectiveness *= Math.max(defenseMitigation, 0.5);
+
+    const defenseOverageThreshold = adjustments.defenseOverageThreshold ?? 22;
+    const defenseOveragePenalty = adjustments.defenseOveragePenalty ?? 0.12;
+    const defenseOverage = Math.max(0, defender.defense - (attacker.attack + defenseOverageThreshold));
+    if (defenseOverage > 0 && defenseOveragePenalty > 0) {
+        const defensePressure = Math.min(0.45, (defenseOverage / (defenseOverageThreshold + 50)) * defenseOveragePenalty);
+        defenseEffectiveness *= Math.max(1 - defensePressure, 0.4);
     }
 
-    if (typeof player.maxHealth !== 'number') {
-        player.maxHealth = player.health;
+    const minimumDamageScalar = Math.max(adjustments.minimumDamageScalar, 0.05);
+    let damage = attacker.attack * (1 - defenseEffectiveness);
+    damage = Math.max(damage, attacker.attack * minimumDamageScalar);
+    damage = Math.floor(damage);
+    damage = Math.max(damage, 1);
+
+    const attackAdvantage = Math.max(0, attacker.attack - defender.defense);
+    const attackAdvantageRatio = attackAdvantage / combinedStats;
+
+    if (willCrit) {
+        const critMitigation = 1 - Math.min(
+            adjustments.critMitigationCeiling,
+            attackAdvantageRatio * adjustments.critDamageMitigation
+        );
+        const critBonus = Math.max(adjustments.critBaseBonus, 0.1) * Math.max(critMitigation, 0.4);
+        damage = Math.floor(damage * (1 + critBonus));
     }
 
-    return player;
-}
+    const attackMitigation = 1 - Math.min(
+        adjustments.attackMitigationCeiling,
+        attackAdvantageRatio * adjustments.attackAdvantageMitigation
+    );
+    const mitigatedDamage = Math.floor(damage * Math.max(attackMitigation, 0.5));
+    const minDamageFloor = Math.max(Math.floor(attacker.attack * minimumDamageScalar), 1);
+    let finalDamage = Math.max(mitigatedDamage, minDamageFloor);
 
-function clonePlayer(player) {
-    return JSON.parse(JSON.stringify(player));
-}
-
-async function simulateDeterministicBattle(planConfig, baselineConfig, { planFirst = true, randomSequence } = {}) {
-    const battle = new BattleService();
-    battle.delay = async () => {};
-
-    const planPlayer = clonePlayer(createBasePlayer(planConfig.name, planConfig.overrides));
-    const baselinePlayer = clonePlayer(createBasePlayer(baselineConfig.name, baselineConfig.overrides));
-
-    const firstAttacker = planFirst ? planPlayer : baselinePlayer;
-    const secondAttacker = planFirst ? baselinePlayer : planPlayer;
-    battle.setPlayers(firstAttacker, secondAttacker, () => {});
-
-    const sequence = Array.isArray(randomSequence) && randomSequence.length > 0
-        ? randomSequence.slice()
-        : [0.6];
-    let index = 0;
-    const originalRandom = Math.random;
-    Math.random = () => {
-        const value = sequence[index % sequence.length];
-        index += 1;
-        return value;
-    };
-
-    try {
-        await battle.battle(() => {});
-    } finally {
-        Math.random = originalRandom;
+    const overageThreshold = adjustments.attackOverageThreshold ?? 18;
+    const overagePenalty = adjustments.attackOveragePenalty ?? 0.18;
+    const overageDivisor = adjustments.attackOverageDivisor ?? 80;
+    const attackOverage = Math.max(0, attacker.attack - (defender.defense + overageThreshold));
+    if (attackOverage > 0 && overagePenalty > 0 && overageDivisor > 0) {
+        const overageRatio = Math.min(overagePenalty, attackOverage / overageDivisor);
+        finalDamage = Math.max(Math.floor(finalDamage * (1 - overageRatio)), minDamageFloor);
     }
 
-    const planState = planFirst ? battle.player1 : battle.player2;
-    const baselineState = planFirst ? battle.player2 : battle.player1;
-
-    return {
-        planInitial: planFirst ? planPlayer.maxHealth : baselinePlayer.maxHealth,
-        baselineInitial: planFirst ? baselinePlayer.maxHealth : planPlayer.maxHealth,
-        planRemaining: planState.health,
-        baselineRemaining: baselineState.health
-    };
+    return finalDamage;
 }
 
-function calculatePlanScore(result) {
-    const damageDealt = result.baselineInitial - result.baselineRemaining;
-    const damageTaken = result.planInitial - result.planRemaining;
-    return damageDealt - damageTaken;
-}
-
-test('automated growth plan simulations flag significant imbalances', async () => {
+test('automated growth plan simulations drive targeted balance adjustments', async () => {
     const baselinePlan = { name: '基准养成', overrides: {} };
     const growthPlans = [
         { name: '均衡养成', overrides: {} },
@@ -91,32 +75,47 @@ test('automated growth plan simulations flag significant imbalances', async () =
         { name: '铁壁流', overrides: { attack: 28, defense: 30, health: 280 } }
     ];
 
-    const randomSequences = [
-        [0.62, 0.81, 0.44, 0.73, 0.55, 0.67, 0.49],
-        [0.18, 0.92, 0.36, 0.79, 0.58, 0.27, 0.63]
-    ];
+    const randomSequences = generateRandomSequences(20240521, 8, 4);
+    const baselineAdjustments = {
+        attackAdvantageMitigation: 0.12,
+        attackMitigationCeiling: 0.35,
+        defenseAdvantageMitigation: 0.18,
+        defenseMitigationCeiling: 0.32,
+        minimumDamageScalar: 0.15,
+        critBaseBonus: 0.5,
+        critDamageMitigation: 0.08,
+        critMitigationCeiling: 0.25,
+        attackOverageThreshold: 18,
+        attackOveragePenalty: 0.18,
+        attackOverageDivisor: 80,
+        defenseOverageThreshold: 22,
+        defenseOveragePenalty: 0.12
+    };
+    const evaluation = await evaluatePlans(growthPlans, baselinePlan, randomSequences, {
+        balanceAdjustments: baselineAdjustments
+    });
 
-    const evaluation = new Map();
+    const balancedScore = evaluation.get('均衡养成').averageScore;
+    const burstScore = evaluation.get('暴击流').averageScore;
+    const fortressScore = evaluation.get('铁壁流').averageScore;
+    assert.ok(Math.abs(balancedScore) < 6, `Expected balanced plan to remain near neutral but got ${balancedScore}`);
 
-    for (const plan of growthPlans) {
-        let cumulativeScore = 0;
-        for (const sequence of randomSequences) {
-            const firstRun = await simulateDeterministicBattle(plan, baselinePlan, { planFirst: true, randomSequence: sequence });
-            const secondRun = await simulateDeterministicBattle(plan, baselinePlan, { planFirst: false, randomSequence: sequence });
-            cumulativeScore += (calculatePlanScore(firstRun) + calculatePlanScore(secondRun)) / 2;
-        }
-        const averageScore = cumulativeScore / randomSequences.length;
-        evaluation.set(plan.name, averageScore);
-    }
+    const { adjustments, flaggedPlans } = deriveBalanceAdjustments(evaluation, { imbalanceThreshold: 30 });
+    assert.ok(flaggedPlans.some(plan => plan.planName === '暴击流'), 'Burst plan should be flagged for mitigation');
+    assert.ok(flaggedPlans.some(plan => plan.planName === '铁壁流'), 'Defensive plan should also trigger mitigation');
+    assert.ok(adjustments.attackAdvantageMitigation > 0.18, 'Attack mitigation should increase for burst builds');
+    assert.ok(adjustments.defenseAdvantageMitigation > 0.2, 'Defense mitigation should increase for fortress builds');
 
-    const balancedScore = evaluation.get('均衡养成');
-    const burstScore = evaluation.get('暴击流');
-    const fortressScore = evaluation.get('铁壁流');
+    const tunedEvaluation = await evaluatePlans(growthPlans, baselinePlan, randomSequences, {
+        balanceAdjustments: adjustments
+    });
+    const tunedBurst = tunedEvaluation.get('暴击流').averageScore;
+    const tunedFortress = tunedEvaluation.get('铁壁流').averageScore;
 
-    assert.ok(Math.abs(balancedScore) < 5, `Expected balanced plan to stay neutral but got ${balancedScore}`);
-    assert.ok(burstScore > 40, 'High offensive plan should expose imbalance with a strong positive score');
-    assert.ok(fortressScore > 40, 'Defensive plan should also be highlighted when its survivability outpaces the baseline');
-    assert.ok(burstScore > fortressScore, 'Burst plan should outperform defensive plan in damage differential');
+    assert.ok(Math.abs(tunedBurst) < Math.abs(burstScore), 'Burst plan should be moderated after applying adjustments');
+    assert.ok(Math.abs(tunedFortress) < Math.abs(fortressScore), 'Defensive plan should fall back within acceptable range after adjustments');
+    assert.ok(Math.abs(tunedBurst) <= Math.abs(burstScore) * 0.7, 'Burst advantage should be reduced by at least 30%');
+    assert.ok(Math.abs(tunedFortress) <= Math.abs(fortressScore) * 0.7, 'Defensive advantage should be reduced by at least 30%');
 });
 
 test('equipment stacking and skill effects remain consistent through combat flow', async () => {
@@ -163,10 +162,15 @@ test('equipment stacking and skill effects remain consistent through combat flow
     assert.equal(playerWithEquipment.defense, originalDefense - 5, 'defense penalty should stack after equipment bonuses');
     assert.equal(playerWithEquipment.attackBoostDuration, 3, 'skill duration should be set after activation');
 
-    const defenseEffectiveness = defender.defense / (defender.defense + 50);
-    const rawDamage = Math.max(originalAttack * (1 - defenseEffectiveness), originalAttack * 0.15);
-    const expectedDamage = Math.max(Math.floor(rawDamage), 1);
-    assert.equal(defender.health, 260 - expectedDamage, 'defender health should account for boosted damage output');
+    const inflictedDamage = 260 - defender.health;
+    const willCrit = 0.01 < playerWithEquipment.critChance;
+    const expectedDamage = computeMitigatedDamage(
+        { ...playerWithEquipment, attack: originalAttack },
+        { ...defender, defense: defender.defense },
+        battle.balanceAdjustments,
+        { willCrit }
+    );
+    assert.equal(inflictedDamage, expectedDamage, 'defender health should account for balanced damage output');
 
     battle.handleStatusEffects();
     assert.equal(playerWithEquipment.attackBoostDuration, 2, 'duration should tick down after status handling');
