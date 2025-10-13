@@ -535,19 +535,6 @@ button:disabled {
     line-height: 1.5;
 }
 
-.growth-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-}
-
-.growth-meta__hint {
-    margin-top: 6px;
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    line-height: 1.5;
-}
-
 .growth-panel__actions {
     display: flex;
     flex-wrap: wrap;
@@ -663,27 +650,12 @@ button:disabled {
     min-width: 140px;
 }
 
-.summary-block--progress {
-    align-content: center;
-    gap: 4px;
-}
-
 .summary-block--name {
     align-content: start;
 }
 
 .summary-block--name .summary-value {
     font-size: calc(var(--font-size-small) + 0.05rem);
-}
-
-.summary-subvalue {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    letter-spacing: 0.08rem;
-}
-
-.summary-subvalue span {
-    color: var(--accent-green);
 }
 
 .summary-block--name .summary-health {

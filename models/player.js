@@ -32,8 +32,6 @@ function generateBaseTemplate(name) {
             attack: sanitized.attack,
             defense: sanitized.defense,
             speed: sanitized.speed,
-            level: 1,
-            experience: 0,
             skill: defaultSkill,
             poison: 0,
             burn: 0,
@@ -66,8 +64,8 @@ function resolveSkill(defaultSkill, override) {
 }
 
 function applyPlayerCustomization(basePlayer, defaultSkill, customization = {}) {
-    const { baseOverrides = {}, statAdjustments = {}, skillOverride, metadata = {} } = customization;
-    const overridden = { ...basePlayer, ...metadata };
+    const { baseOverrides = {}, statAdjustments = {}, skillOverride } = customization;
+    const overridden = { ...basePlayer };
 
     Object.entries(baseOverrides).forEach(([key, value]) => {
         overridden[key] = value;
