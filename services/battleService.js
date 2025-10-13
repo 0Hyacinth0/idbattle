@@ -1,11 +1,48 @@
 // 战斗服务模块
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let defaultBalanceAdjustments = {};
+try {
+    const balanceConfigPath = resolve(__dirname, '../config/balanceAdjustments.json');
+    const fileContent = readFileSync(balanceConfigPath, 'utf-8');
+    defaultBalanceAdjustments = JSON.parse(fileContent);
+} catch (error) {
+    defaultBalanceAdjustments = {};
+}
+
+const BASE_BALANCE_ADJUSTMENTS = {
+    attackAdvantageMitigation: 0.12,
+    attackMitigationCeiling: 0.35,
+    defenseAdvantageMitigation: 0.18,
+    defenseMitigationCeiling: 0.32,
+    minimumDamageScalar: 0.15,
+    critBaseBonus: 0.5,
+    critDamageMitigation: 0.08,
+    critMitigationCeiling: 0.25,
+    attackOverageThreshold: 18,
+    attackOverageDivisor: 80,
+    attackOveragePenalty: 0.18,
+    defenseOverageThreshold: 22,
+    defenseOveragePenalty: 0.12,
+    ...defaultBalanceAdjustments
+};
+
 export class BattleService {
-    constructor() {
+    constructor(options = {}) {
         this.player1 = null;
         this.player2 = null;
         this.p1Stunned = false;
         this.p2Stunned = false;
         this.updatePlayerInfoCallback = null;
+        this.balanceAdjustments = {
+            ...BASE_BALANCE_ADJUSTMENTS,
+            ...(options.balanceAdjustments || {})
+        };
     }
 
     setPlayers(player1, player2, updateCallback) {
@@ -137,7 +174,27 @@ export class BattleService {
             return { log };
         }
 
+        const adjustments = this.balanceAdjustments;
+
+        const combinedStats = Math.max(attacker.attack + defender.defense, 1);
+        const defenseAdvantage = Math.max(0, defender.defense - attacker.attack);
+
+        const defenseMitigationRatio = defenseAdvantage / combinedStats;
+        const defenseMitigation = 1 - Math.min(
+            adjustments.defenseMitigationCeiling,
+            defenseMitigationRatio * adjustments.defenseAdvantageMitigation
+        );
+
         let defenseEffectiveness = defender.defense / (defender.defense + 50);
+        defenseEffectiveness *= Math.max(defenseMitigation, 0.5);
+
+        const defenseOverageThreshold = adjustments.defenseOverageThreshold ?? 22;
+        const defenseOveragePenalty = adjustments.defenseOveragePenalty ?? 0.12;
+        const defenseOverage = Math.max(0, defender.defense - (attacker.attack + defenseOverageThreshold));
+        if (defenseOverage > 0 && defenseOveragePenalty > 0) {
+            const defensePressure = Math.min(0.45, (defenseOverage / (defenseOverageThreshold + 50)) * defenseOveragePenalty);
+            defenseEffectiveness *= Math.max(1 - defensePressure, 0.4);
+        }
 
         if (defender.armorPenetration) {
             const effectiveDefense = defender.defense * (1 - defender.armorPenetration);
@@ -145,14 +202,23 @@ export class BattleService {
             log.push(`${defender.name} 破防效果生效! 防御效果降低了 ${Math.floor(defender.armorPenetration * 100)}%!`);
         }
 
-        let damage = Math.max(attacker.attack * (1 - defenseEffectiveness), attacker.attack * 0.15);
+        const minimumDamageScalar = Math.max(adjustments.minimumDamageScalar || 0.15, 0.05);
+        let damage = attacker.attack * (1 - defenseEffectiveness);
+        damage = Math.max(damage, attacker.attack * minimumDamageScalar);
         damage = Math.floor(damage);
         damage = Math.max(damage, 1);
 
         let isCritical = false;
         if (Math.random() < attacker.critChance) {
             isCritical = true;
-            damage = Math.floor(damage * 1.5);
+            const attackAdvantage = Math.max(0, attacker.attack - defender.defense);
+            const attackAdvantageRatio = attackAdvantage / combinedStats;
+            const critMitigation = 1 - Math.min(
+                adjustments.critMitigationCeiling,
+                attackAdvantageRatio * (adjustments.critDamageMitigation || 0)
+            );
+            const critBonus = Math.max(adjustments.critBaseBonus || 0.5, 0.1) * Math.max(critMitigation, 0.4);
+            damage = Math.floor(damage * (1 + critBonus));
             log.push(`${attacker.name} 触发了会心! 伤害提升至 ${damage}`);
         }
 
@@ -160,6 +226,28 @@ export class BattleService {
         if (Math.random() < parryChance) {
             log.push(`${defender.name} 触发了招架! 完全免疫本次伤害!`);
             damage = 0;
+        }
+
+        if (damage > 0) {
+            const attackAdvantage = Math.max(0, attacker.attack - defender.defense);
+            const attackAdvantageRatio = attackAdvantage / combinedStats;
+            const attackMitigation = 1 - Math.min(
+                adjustments.attackMitigationCeiling,
+                attackAdvantageRatio * (adjustments.attackAdvantageMitigation || 0)
+            );
+            const mitigatedDamage = Math.floor(damage * Math.max(attackMitigation, 0.5));
+            const minDamageFloor = Math.max(Math.floor(attacker.attack * minimumDamageScalar), 1);
+            damage = Math.max(mitigatedDamage, minDamageFloor);
+
+            const overageThreshold = adjustments.attackOverageThreshold ?? 18;
+            const overagePenalty = adjustments.attackOveragePenalty ?? 0.18;
+            const overageDivisor = adjustments.attackOverageDivisor ?? 80;
+            const attackOverage = Math.max(0, attacker.attack - (defender.defense + overageThreshold));
+            if (attackOverage > 0 && overagePenalty > 0 && overageDivisor > 0) {
+                const overageRatio = Math.min(overagePenalty, attackOverage / overageDivisor);
+                const penalizedDamage = Math.floor(damage * (1 - overageRatio));
+                damage = Math.max(penalizedDamage, minDamageFloor);
+            }
         }
 
         let skillTriggered = false;

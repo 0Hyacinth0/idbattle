@@ -34,3 +34,13 @@ npm test
 ```
 
 全部用例通过即可确认战斗核心逻辑无误。
+
+## 自动化平衡调优
+
+为了快速检测并缓解数值失衡问题，新增了 `scripts/run-balance-analysis.js` 脚本。脚本会运行多组固定随机序列的模拟战斗，对比不同成长方案的平均表现，并在检测到偏离阈值时自动写入 `config/balanceAdjustments.json` 中的平衡参数。
+
+```bash
+node scripts/run-balance-analysis.js
+```
+
+执行完成后，终端会输出各方案的分数、被标记的失衡方案以及新的调优参数。随后重新运行测试即可验证调整是否生效。
