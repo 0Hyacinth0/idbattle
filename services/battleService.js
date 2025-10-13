@@ -1,19 +1,17 @@
 // 战斗服务模块
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const globalBalanceOverrides = (() => {
+    if (typeof globalThis === 'undefined') {
+        return {};
+    }
 
-let defaultBalanceAdjustments = {};
-try {
-    const balanceConfigPath = resolve(__dirname, '../config/balanceAdjustments.json');
-    const fileContent = readFileSync(balanceConfigPath, 'utf-8');
-    defaultBalanceAdjustments = JSON.parse(fileContent);
-} catch (error) {
-    defaultBalanceAdjustments = {};
-}
+    const overrides = globalThis.__BALANCE_ADJUSTMENTS__;
+    if (!overrides || typeof overrides !== 'object') {
+        return {};
+    }
+
+    return overrides;
+})();
 
 const BASE_BALANCE_ADJUSTMENTS = {
     attackAdvantageMitigation: 0.12,
@@ -29,7 +27,7 @@ const BASE_BALANCE_ADJUSTMENTS = {
     attackOveragePenalty: 0.18,
     defenseOverageThreshold: 22,
     defenseOveragePenalty: 0.12,
-    ...defaultBalanceAdjustments
+    ...globalBalanceOverrides
 };
 
 export class BattleService {
