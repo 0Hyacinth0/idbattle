@@ -135,4 +135,17 @@ function generateAttributes(name, customization = {}) {
     return playerWithEquipment;
 }
 
-export { generateAttributes };
+function getBasePlayerProfile(name) {
+    if (typeof name !== 'string' || name.trim() === '') {
+        return null;
+    }
+    const trimmedName = name.trim();
+    const template = generateBaseTemplate(trimmedName);
+    return {
+        md5: template.md5,
+        basePlayer: { ...template.basePlayer },
+        defaultSkill: { ...template.defaultSkill }
+    };
+}
+
+export { generateAttributes, getBasePlayerProfile };

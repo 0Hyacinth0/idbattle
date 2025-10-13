@@ -4,6 +4,8 @@ import { BattleService } from './services/battleService.js';
 import { updatePlayerInfo, initPlayerPanels } from './ui/playerUI.js';
 import { displayBattleLog, resetBattleLog } from './ui/logUI.js';
 import { EquipmentType, equipmentList, setEffects, equipmentByType } from './models/equipment.js';
+import { initPlayerGrowthUI } from './ui/playerGrowthUI.js';
+import { getPlayerConfig } from './utils/storage.js';
 
 // 将一些常量挂载到window对象，以便在其他模块中访问
 window.equipmentList = equipmentList;
@@ -18,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isBattleRunning = false;
 
     initPlayerPanels();
+    initPlayerGrowthUI();
 
     battleBtn.addEventListener('click', async () => {
         if (isBattleRunning) {
@@ -42,8 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const player1 = generateAttributes(player1Name);
-            const player2 = generateAttributes(player2Name);
+            const player1Customization = getPlayerConfig(player1Name) || undefined;
+            const player2Customization = getPlayerConfig(player2Name) || undefined;
+
+            const player1 = generateAttributes(player1Name, player1Customization);
+            const player2 = generateAttributes(player2Name, player2Customization);
 
             battleService.setPlayers(player1, player2, updatePlayerInfo);
 
