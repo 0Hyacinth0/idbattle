@@ -86,6 +86,49 @@ h1 {
     margin-bottom: 28px;
 }
 
+.view-switcher {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.view-switcher__button {
+    background: var(--bg-panel-light);
+    color: var(--accent-blue);
+    border: 3px solid var(--border-dark);
+    padding: 10px 20px;
+    min-width: 140px;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.view-switcher__button--active {
+    background: var(--accent-blue);
+    color: var(--border-dark);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.view-switcher__button:focus-visible {
+    outline: 3px solid rgba(108, 216, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.view {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.view[hidden] {
+    display: none !important;
+}
+
+.view--battle .player-form {
+    margin-bottom: 0;
+}
+
 h2 {
     font-size: var(--font-size-subheading);
     display: inline-flex;

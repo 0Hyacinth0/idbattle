@@ -19,8 +19,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const battleService = new BattleService();
     let isBattleRunning = false;
 
+    const viewSwitcher = document.querySelector('[data-role="view-switcher"]');
+    const battleView = document.querySelector('[data-role="battle-view"]');
+    const growthView = document.querySelector('[data-role="growth-view"]');
+    let currentView = 'battle';
+
     initPlayerPanels();
     initPlayerGrowthUI();
+
+    if (viewSwitcher && battleView && growthView) {
+        const viewButtons = Array.from(viewSwitcher.querySelectorAll('[data-view]'));
+
+        const setActiveView = (targetView) => {
+            if (targetView === currentView) {
+                return;
+            }
+
+            currentView = targetView === 'growth' ? 'growth' : 'battle';
+
+            const showingGrowth = currentView === 'growth';
+            battleView.hidden = showingGrowth;
+            growthView.hidden = !showingGrowth;
+
+            viewButtons.forEach((button) => {
+                const isActive = button.dataset.view === currentView;
+                button.classList.toggle('view-switcher__button--active', isActive);
+                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                button.setAttribute('tabindex', isActive ? '0' : '-1');
+            });
+        };
+
+        viewSwitcher.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-view]');
+            if (!button) {
+                return;
+            }
+            setActiveView(button.dataset.view);
+        });
+
+        viewSwitcher.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+                return;
+            }
+            event.preventDefault();
+            const currentIndex = viewButtons.findIndex((button) => button.dataset.view === currentView);
+            if (currentIndex === -1) {
+                return;
+            }
+            const offset = event.key === 'ArrowLeft' ? -1 : 1;
+            const nextIndex = (currentIndex + offset + viewButtons.length) % viewButtons.length;
+            const nextButton = viewButtons[nextIndex];
+            if (nextButton) {
+                nextButton.focus();
+                setActiveView(nextButton.dataset.view);
+            }
+        });
+    }
 
     battleBtn.addEventListener('click', async () => {
         if (isBattleRunning) {

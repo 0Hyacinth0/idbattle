@@ -11,25 +11,169 @@
         <div class="version-badge">v1.1.0-b2(Prism)</div>
         <h1>id大作战</h1>
 
-        <div class="player-form" role="form" aria-label="玩家创建表单">
-            <div class="player-input">
-                <label for="player1">玩家1:</label>
-                <input type="text" id="player1" placeholder="输入玩家1名称" autocomplete="off">
-            </div>
-            <div class="player-input">
-                <label for="player2">玩家2:</label>
-                <input type="text" id="player2" placeholder="输入玩家2名称" autocomplete="off">
-            </div>
-            <button id="battle-btn" type="button">开始对决！</button>
-            <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
+        <div class="view-switcher" data-role="view-switcher" role="tablist" aria-label="页面切换">
+            <button
+                type="button"
+                id="view-button-battle"
+                class="view-switcher__button view-switcher__button--active"
+                data-view="battle"
+                role="tab"
+                aria-selected="true"
+                aria-controls="battle-view"
+                tabindex="0"
+            >
+                战斗大厅
+            </button>
+            <button
+                type="button"
+                id="view-button-growth"
+                class="view-switcher__button"
+                data-view="growth"
+                role="tab"
+                aria-selected="false"
+                aria-controls="growth-view"
+                tabindex="-1"
+            >
+                玩家养成实验室
+            </button>
         </div>
 
-        <section class="growth-lab" data-player-growth aria-label="玩家养成系统">
-            <div class="growth-lab__header">
-                <h2>玩家养成实验室</h2>
-                <p class="growth-lab__hint">在这里分配属性点、安排装备与技能，保存成长数据后即可在战斗中使用。</p>
+        <section class="view view--battle" data-role="battle-view" id="battle-view" role="tabpanel" aria-labelledby="view-button-battle">
+            <div class="player-form" role="form" aria-label="玩家创建表单">
+                <div class="player-input">
+                    <label for="player1">玩家1:</label>
+                    <input type="text" id="player1" placeholder="输入玩家1名称" autocomplete="off">
+                </div>
+                <div class="player-input">
+                    <label for="player2">玩家2:</label>
+                    <input type="text" id="player2" placeholder="输入玩家2名称" autocomplete="off">
+                </div>
+                <button id="battle-btn" type="button">开始对决！</button>
+                <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
             </div>
-            <div class="growth-lab__panels">
+
+            <div class="battle-area">
+                <div class="player-info player1-info" aria-live="polite">
+                    <div class="player-card">
+                        <div class="player-card__header">
+                            <h2>玩家1信息</h2>
+                            <div class="player-card__summary">
+                                <div class="summary-block summary-block--name">
+                                    <span class="summary-label">名称</span>
+                                    <span class="summary-value" id="p1-name">-</span>
+                                    <div class="summary-health">
+                                        <div class="health-meter" id="p1-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家1生命值" aria-live="polite">
+                                            <div class="health-meter__track">
+                                                <div class="health-meter__fill"></div>
+                                            </div>
+                                            <span class="health-meter__value" id="p1-health-bar-value">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="summary-block">
+                                    <span class="summary-label">技能</span>
+                                    <span class="summary-value" id="p1-skill">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="player-card__stats-grid" role="list">
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label">攻击</span>
+                                <span class="stat-value" id="p1-attack">-</span>
+                            </div>
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label">防御</span>
+                                <span class="stat-value" id="p1-defense">-</span>
+                            </div>
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label" data-speed-label="p1">加速</span>
+                                <span class="stat-value" id="p1-speed">-</span>
+                            </div>
+                        </div>
+                        <div class="player-card__detail-grid">
+                            <div class="detail-section">
+                                <h3>装备</h3>
+                                <div id="p1-equipment" class="detail-list" aria-live="polite"></div>
+                            </div>
+                            <div class="detail-section">
+                                <h3>状态</h3>
+                                <div id="p1-status" class="detail-list" aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-result">
+                    <h2>战斗日志</h2>
+                    <div id="result-log" role="log" aria-live="polite"></div>
+                </div>
+
+                <div class="player-info player2-info" aria-live="polite">
+                    <div class="player-card">
+                        <div class="player-card__header">
+                            <h2>玩家2信息</h2>
+                            <div class="player-card__summary">
+                                <div class="summary-block summary-block--name">
+                                    <span class="summary-label">名称</span>
+                                    <span class="summary-value" id="p2-name">-</span>
+                                    <div class="summary-health">
+                                        <div class="health-meter" id="p2-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家2生命值" aria-live="polite">
+                                            <div class="health-meter__track">
+                                                <div class="health-meter__fill"></div>
+                                            </div>
+                                            <span class="health-meter__value" id="p2-health-bar-value">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="summary-block">
+                                    <span class="summary-label">技能</span>
+                                    <span class="summary-value" id="p2-skill">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="player-card__stats-grid" role="list">
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label">攻击</span>
+                                <span class="stat-value" id="p2-attack">-</span>
+                            </div>
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label">防御</span>
+                                <span class="stat-value" id="p2-defense">-</span>
+                            </div>
+                            <div class="stat-tile" role="listitem">
+                                <span class="stat-label" data-speed-label="p2">加速</span>
+                                <span class="stat-value" id="p2-speed">-</span>
+                            </div>
+                        </div>
+                        <div class="player-card__detail-grid">
+                            <div class="detail-section">
+                                <h3>装备</h3>
+                                <div id="p2-equipment" class="detail-list" aria-live="polite"></div>
+                            </div>
+                            <div class="detail-section">
+                                <h3>状态</h3>
+                                <div id="p2-status" class="detail-list" aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="view view--growth"
+            data-role="growth-view"
+            id="growth-view"
+            role="tabpanel"
+            aria-labelledby="view-button-growth"
+            hidden
+        >
+            <section class="growth-lab" data-player-growth aria-label="玩家养成系统">
+                <div class="growth-lab__header">
+                    <h2>玩家养成实验室</h2>
+                    <p class="growth-lab__hint">在这里分配属性点、安排装备与技能，保存成长数据后即可在战斗中使用。</p>
+                </div>
+                <div class="growth-lab__panels">
                 <article class="growth-panel" data-builder="p1" aria-label="玩家1养成">
                     <header class="growth-panel__header">
                         <h3>玩家1养成</h3>
@@ -246,115 +390,8 @@
                 </div>
                 <textarea rows="6" data-role="storage-text" placeholder="在此粘贴或复制成长配置JSON"></textarea>
                 <p class="growth-storage__status" data-role="storage-status" aria-live="polite"></p>
-            </div>
+            </section>
         </section>
-
-        <div class="battle-area">
-            <div class="player-info player1-info" aria-live="polite">
-                <div class="player-card">
-                    <div class="player-card__header">
-                        <h2>玩家1信息</h2>
-                        <div class="player-card__summary">
-                            <div class="summary-block summary-block--name">
-                                <span class="summary-label">名称</span>
-                                <span class="summary-value" id="p1-name">-</span>
-                                <div class="summary-health">
-                                    <div class="health-meter" id="p1-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家1生命值" aria-live="polite">
-                                        <div class="health-meter__track">
-                                            <div class="health-meter__fill"></div>
-                                        </div>
-                                        <span class="health-meter__value" id="p1-health-bar-value">--</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="summary-block">
-                                <span class="summary-label">技能</span>
-                                <span class="summary-value" id="p1-skill">-</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card__stats-grid" role="list">
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label">攻击</span>
-                            <span class="stat-value" id="p1-attack">-</span>
-                        </div>
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label">防御</span>
-                            <span class="stat-value" id="p1-defense">-</span>
-                        </div>
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label" data-speed-label="p1">加速</span>
-                            <span class="stat-value" id="p1-speed">-</span>
-                        </div>
-                    </div>
-                    <div class="player-card__detail-grid">
-                        <div class="detail-section">
-                            <h3>装备</h3>
-                            <div id="p1-equipment" class="detail-list" aria-live="polite"></div>
-                        </div>
-                        <div class="detail-section">
-                            <h3>状态</h3>
-                            <div id="p1-status" class="detail-list" aria-live="polite"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="battle-result">
-                <h2>战斗日志</h2>
-                <div id="result-log" role="log" aria-live="polite"></div>
-            </div>
-
-            <div class="player-info player2-info" aria-live="polite">
-                <div class="player-card">
-                    <div class="player-card__header">
-                        <h2>玩家2信息</h2>
-                        <div class="player-card__summary">
-                            <div class="summary-block summary-block--name">
-                                <span class="summary-label">名称</span>
-                                <span class="summary-value" id="p2-name">-</span>
-                                <div class="summary-health">
-                                    <div class="health-meter" id="p2-health-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="0" aria-label="玩家2生命值" aria-live="polite">
-                                        <div class="health-meter__track">
-                                            <div class="health-meter__fill"></div>
-                                        </div>
-                                        <span class="health-meter__value" id="p2-health-bar-value">--</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="summary-block">
-                                <span class="summary-label">技能</span>
-                                <span class="summary-value" id="p2-skill">-</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="player-card__stats-grid" role="list">
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label">攻击</span>
-                            <span class="stat-value" id="p2-attack">-</span>
-                        </div>
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label">防御</span>
-                            <span class="stat-value" id="p2-defense">-</span>
-                        </div>
-                        <div class="stat-tile" role="listitem">
-                            <span class="stat-label" data-speed-label="p2">加速</span>
-                            <span class="stat-value" id="p2-speed">-</span>
-                        </div>
-                    </div>
-                    <div class="player-card__detail-grid">
-                        <div class="detail-section">
-                            <h3>装备</h3>
-                            <div id="p2-equipment" class="detail-list" aria-live="polite"></div>
-                        </div>
-                        <div class="detail-section">
-                            <h3>状态</h3>
-                            <div id="p2-status" class="detail-list" aria-live="polite"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script type="module" src="main.js"></script>
