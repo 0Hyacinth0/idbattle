@@ -27,7 +27,13 @@ const MIME_TYPES = new Map([
 
 function resolveRequestPath(requestUrl) {
   const request = new URL(requestUrl, 'http://localhost');
-  let pathname = decodeURIComponent(request.pathname);
+  let pathname;
+
+  try {
+    pathname = decodeURIComponent(request.pathname);
+  } catch (error) {
+    return { pathname: null, error };
+  }
 
   if (pathname.endsWith('/')) {
     pathname += 'index.html';
@@ -37,7 +43,7 @@ function resolveRequestPath(requestUrl) {
     pathname = pathname.slice(1);
   }
 
-  return pathname || 'index.html';
+  return { pathname: pathname || 'index.html' };
 }
 
 function getContentType(filePath) {
@@ -73,7 +79,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const resolvedPath = resolveRequestPath(req.url);
+  const { pathname: resolvedPath, error: decodeError } = resolveRequestPath(req.url);
+
+  if (!resolvedPath) {
+    res.writeHead(400);
+    res.end('Bad Request');
+    if (decodeError) {
+      console.warn('Failed to decode request path:', decodeError);
+    }
+    return;
+  }
+
   const absolutePath = path.resolve(rootDir, resolvedPath);
 
   if (!absolutePath.startsWith(rootDir + path.sep) && absolutePath !== rootDir) {

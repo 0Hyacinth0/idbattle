@@ -101,6 +101,10 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
+function escapeRegex(text) {
+    return text.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
+}
+
 function highlightLine(line, players) {
     const container = document.createElement('span');
     container.textContent = line;
@@ -111,8 +115,12 @@ function highlightLine(line, players) {
             return;
         }
         const escapedName = escapeHtml(name);
+        const escapedPattern = escapeRegex(escapedName);
+        if (!escapedPattern) {
+            return;
+        }
         const highlight = `<span style="color:${color};">${escapedName}</span>`;
-        const nameRegex = new RegExp(escapedName, 'g');
+        const nameRegex = new RegExp(escapedPattern, 'g');
         processed = processed.replace(nameRegex, highlight);
     });
 
