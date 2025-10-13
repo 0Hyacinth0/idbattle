@@ -1,0 +1,18 @@
+{
+  "attackAdvantageMitigation": 0.2523,
+  "attackMitigationCeiling": 0.52,
+  "defenseAdvantageMitigation": 0.22,
+  "defenseMitigationCeiling": 0.38,
+  "minimumDamageScalar": 0.15,
+  "critBaseBonus": 0.5,
+  "critDamageMitigation": 0.1383,
+  "critMitigationCeiling": 0.32,
+  "attackOverageThreshold": 15.13,
+  "attackOveragePenalty": 0.2958,
+  "attackOverageDivisor": 66.17,
+  "defenseOverageThreshold": 22,
+  "defenseOveragePenalty": 0.12,
+  "generatedAt": "2025-10-13T09:26:36.857Z",
+  "sampleSize": 12,
+  "randomSequenceSeed": 20240521
+}
