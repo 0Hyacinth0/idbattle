@@ -1,5 +1,11 @@
 import { getBasePlayerProfile } from '../models/player.js';
-import { EquipmentType, equipmentByType, equipmentList } from '../models/equipment.js';
+import {
+    EquipmentType,
+    equipmentByType,
+    equipmentList,
+    getEquipmentWithEnhancement,
+    MAX_ENHANCEMENT_LEVEL
+} from '../models/equipment.js';
 import skills from '../models/skills.js';
 import {
     getPlayerConfig,
@@ -35,6 +41,58 @@ const ATTRIBUTE_LABELS = {
 
 const BUILDER_KEYS = ['p1', 'p2'];
 
+function clampEnhancement(level, fallback = 0) {
+    const parsed = Number.parseInt(level, 10);
+    if (Number.isNaN(parsed)) {
+        return fallback;
+    }
+    return Math.min(Math.max(parsed, 0), MAX_ENHANCEMENT_LEVEL);
+}
+
+function normalizeEquipmentSelection(selection) {
+    if (!selection) {
+        return null;
+    }
+
+    if (typeof selection === 'string') {
+        const baseItem = equipmentList[selection];
+        if (!baseItem) {
+            return null;
+        }
+        return {
+            name: baseItem.name,
+            enhancementLevel: clampEnhancement(baseItem.defaultEnhancementLevel, 0)
+        };
+    }
+
+    if (typeof selection === 'object') {
+        const name = selection.name || selection.equipmentName;
+        if (!name || !equipmentList[name]) {
+            return null;
+        }
+        const baseItem = equipmentList[name];
+        const fallback = clampEnhancement(baseItem.defaultEnhancementLevel, 0);
+        const level = clampEnhancement(selection.enhancementLevel, fallback);
+        return {
+            name: baseItem.name,
+            enhancementLevel: level
+        };
+    }
+
+    return null;
+}
+
+function normalizeEquipmentLoadout(loadout = {}) {
+    const normalized = {};
+    Object.entries(loadout).forEach(([typeKey, value]) => {
+        const normalizedSelection = normalizeEquipmentSelection(value);
+        if (normalizedSelection) {
+            normalized[typeKey] = normalizedSelection;
+        }
+    });
+    return normalized;
+}
+
 function createDefaultState() {
     return {
         name: '',
@@ -50,7 +108,6 @@ function createDefaultState() {
         metadata: {
             level: 1,
             experience: 0,
-            notes: '',
             availablePoints: TOTAL_ATTRIBUTE_POINTS
         }
     };
@@ -87,8 +144,11 @@ function formatSigned(value) {
 
 function computeEquipmentBonus(equipmentLoadout) {
     const bonuses = {};
-    Object.values(equipmentLoadout || {}).forEach(name => {
-        const item = equipmentList[name];
+    Object.values(equipmentLoadout || {}).forEach(selection => {
+        if (!selection || !selection.name) {
+            return;
+        }
+        const item = getEquipmentWithEnhancement(selection.name, selection.enhancementLevel);
         if (!item || !item.attributes) {
             return;
         }
@@ -159,7 +219,7 @@ function renderEquipmentPreview(panel, state) {
         return;
     }
     container.innerHTML = '';
-    const entries = Object.entries(state.equipmentLoadout).filter(([, value]) => value);
+    const entries = Object.entries(state.equipmentLoadout).filter(([, value]) => value && value.name);
     if (entries.length === 0) {
         const placeholder = document.createElement('p');
         placeholder.className = 'growth-equipment__empty';
@@ -168,8 +228,11 @@ function renderEquipmentPreview(panel, state) {
         return;
     }
 
-    entries.forEach(([typeKey, name]) => {
-        const item = equipmentList[name];
+    entries.forEach(([typeKey, selection]) => {
+        if (!selection || !selection.name) {
+            return;
+        }
+        const item = getEquipmentWithEnhancement(selection.name, selection.enhancementLevel);
         if (!item) {
             return;
         }
@@ -178,7 +241,8 @@ function renderEquipmentPreview(panel, state) {
 
         const header = document.createElement('div');
         header.className = 'equipment-preview-item__header';
-        header.textContent = `${EquipmentType[typeKey] || item.type}：${item.name}`;
+        const enhancementLabel = item.enhancementLevel > 0 ? ` +${item.enhancementLevel}` : '';
+        header.textContent = `${EquipmentType[typeKey] || item.type}：${item.name}${enhancementLabel}`;
         itemWrapper.appendChild(header);
 
         const attrList = document.createElement('ul');
@@ -213,7 +277,6 @@ function createDefaultMetadata() {
     return {
         level: 1,
         experience: 0,
-        notes: '',
         availablePoints: TOTAL_ATTRIBUTE_POINTS
     };
 }
@@ -226,12 +289,14 @@ function applyConfigToState(state, config) {
         speed: 0,
         ...(config?.statAdjustments || {})
     };
-    state.equipmentLoadout = { ...(config?.equipmentLoadout || {}) };
+    state.equipmentLoadout = normalizeEquipmentLoadout(config?.equipmentLoadout);
     state.skillOverride = config?.skillOverride || '';
-    state.metadata = {
+    const metadata = {
         ...createDefaultMetadata(),
         ...(config?.metadata || {})
     };
+    delete metadata.notes;
+    state.metadata = metadata;
     recalcAvailablePoints(state);
 }
 
@@ -344,11 +409,6 @@ function updatePanelUI(panel, playerKey) {
         expInput.value = state.metadata.experience || 0;
     }
 
-    const notesInput = panel.querySelector('[data-role="notes"]');
-    if (notesInput) {
-        notesInput.value = state.metadata.notes || '';
-    }
-
     const defaultSkillWrapper = panel.querySelector('[data-role="default-skill-wrapper"]');
     if (defaultSkillWrapper) {
         defaultSkillWrapper.classList.toggle('is-hidden', !state.baseProfile);
@@ -360,7 +420,21 @@ function updatePanelUI(panel, playerKey) {
             return;
         }
         populateEquipmentOptions(select, typeKey);
-        select.value = state.equipmentLoadout[typeKey] || '';
+        const selection = state.equipmentLoadout[typeKey];
+        select.value = selection?.name || '';
+
+        const levelInput = panel.querySelector(`[data-equip-level="${typeKey}"]`);
+        if (levelInput) {
+            const baseItem = selection?.name ? equipmentList[selection.name] : null;
+            const defaultLevel = baseItem?.defaultEnhancementLevel ?? 0;
+            const levelValue = typeof selection?.enhancementLevel === 'number'
+                ? selection.enhancementLevel
+                : defaultLevel;
+            levelInput.value = clampEnhancement(levelValue, defaultLevel);
+            levelInput.disabled = !selection?.name;
+            levelInput.setAttribute('aria-disabled', levelInput.disabled ? 'true' : 'false');
+            levelInput.dataset.defaultLevel = defaultLevel;
+        }
     });
 
     renderEquipmentPreview(panel, state);
@@ -407,9 +481,21 @@ function handlePanelActions(panel, playerKey, root) {
                 return;
             }
             recalcAvailablePoints(state);
+            const normalizedLoadout = {};
+            Object.entries(state.equipmentLoadout).forEach(([typeKey, value]) => {
+                if (!value || !value.name) {
+                    return;
+                }
+                const baseItem = equipmentList[value.name];
+                const fallback = baseItem?.defaultEnhancementLevel ?? 0;
+                normalizedLoadout[typeKey] = {
+                    name: value.name,
+                    enhancementLevel: clampEnhancement(value.enhancementLevel, fallback)
+                };
+            });
             const configToSave = {
                 statAdjustments: { ...state.statAdjustments },
-                equipmentLoadout: { ...state.equipmentLoadout },
+                equipmentLoadout: normalizedLoadout,
                 skillOverride: state.skillOverride || '',
                 metadata: {
                     ...state.metadata,
@@ -472,14 +558,6 @@ function handleInputs(panel, playerKey) {
         });
     }
 
-    const notesInput = panel.querySelector('[data-role="notes"]');
-    if (notesInput) {
-        notesInput.addEventListener('input', () => {
-            const state = builderState[playerKey];
-            state.metadata.notes = notesInput.value.slice(0, 400);
-        });
-    }
-
     const skillSelect = panel.querySelector('[data-role="skill-select"]');
     if (skillSelect) {
         populateSkillOptions(skillSelect);
@@ -500,12 +578,35 @@ function handleInputs(panel, playerKey) {
             const state = builderState[playerKey];
             const value = select.value;
             if (value) {
-                state.equipmentLoadout[typeKey] = value;
+                const baseItem = equipmentList[value];
+                const defaultLevel = baseItem?.defaultEnhancementLevel ?? 0;
+                const previous = state.equipmentLoadout[typeKey];
+                const shouldKeepLevel = previous && previous.name === value;
+                const nextLevel = shouldKeepLevel ? previous.enhancementLevel : defaultLevel;
+                state.equipmentLoadout[typeKey] = {
+                    name: value,
+                    enhancementLevel: clampEnhancement(nextLevel, defaultLevel)
+                };
             } else {
                 delete state.equipmentLoadout[typeKey];
             }
             updatePanelUI(panel, playerKey);
         });
+
+        const levelInput = panel.querySelector(`[data-equip-level="${typeKey}"]`);
+        if (levelInput) {
+            levelInput.addEventListener('input', () => {
+                const state = builderState[playerKey];
+                const selection = state.equipmentLoadout[typeKey];
+                if (!selection || !selection.name) {
+                    return;
+                }
+                const baseItem = equipmentList[selection.name];
+                const fallback = baseItem?.defaultEnhancementLevel ?? 0;
+                selection.enhancementLevel = clampEnhancement(levelInput.value, fallback);
+                updatePanelUI(panel, playerKey);
+            });
+        }
     });
 }
 

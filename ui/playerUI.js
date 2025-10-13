@@ -32,6 +32,14 @@ function formatEquipmentProperty(name, value) {
     return `${name}${sign}${magnitude}`;
 }
 
+function formatNonNegativeInteger(value, minimum = 0) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+        return '-';
+    }
+    const normalized = Math.max(minimum, Math.floor(value));
+    return normalized.toString();
+}
+
 const ATTRIBUTE_LABELS = {
     attack: '攻击',
     defense: '防御',
@@ -205,6 +213,8 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
         defense: document.getElementById(`${prefix}-defense`),
         speed: document.getElementById(`${prefix}-speed`),
         skill: document.getElementById(`${prefix}-skill`),
+        level: document.getElementById(`${prefix}-level`),
+        experience: document.getElementById(`${prefix}-experience`),
         equipment: document.getElementById(`${prefix}-equipment`),
         status: document.getElementById(`${prefix}-status`)
     };
@@ -222,6 +232,12 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
         updateHealthMeter(prefix, player.health, player.maxHealth);
         if (elements.skill && player.skill) {
             elements.skill.textContent = `${player.skill.name} (${player.skill.description})`;
+        }
+        if (elements.level) {
+            elements.level.textContent = formatNonNegativeInteger(player.level, 1);
+        }
+        if (elements.experience) {
+            elements.experience.textContent = formatNonNegativeInteger(player.experience, 0);
         }
     }
 
