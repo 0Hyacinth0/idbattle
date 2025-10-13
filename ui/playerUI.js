@@ -190,8 +190,10 @@ function renderEmptyMessage(container, message) {
 }
 
 // 更新玩家信息显示
-function updatePlayerInfo(player, isPlayer1) {
+function updatePlayerInfo(player, isPlayer1, options = {}) {
     const prefix = isPlayer1 ? 'p1' : 'p2';
+    const sections = Array.isArray(options.sections) ? new Set(options.sections) : null;
+    const shouldUpdate = (section) => !sections || sections.has(section);
 
     // 初始化招架几率(如果不存在)
     player.parryChance = player.parryChance || 0;
@@ -215,106 +217,108 @@ function updatePlayerInfo(player, isPlayer1) {
         }
     }
 
-    // 更新基本属性（考虑临时效果）
-    elements.name.textContent = player.name;
-    updateHealthMeter(prefix, player.health, player.maxHealth);
-
-    // 计算考虑临时效果后的实际属性值
-    let actualAttack = player.attack;
-    let actualDefense = player.defense;
-    let actualSpeed = player.speed;
-
-    // 应用攻击相关临时效果
-    if (player.attackBoostDuration > 0) {
-        actualAttack += player.skill?.attackBoost || 0;
-    }
-    if (player.attackReductionDuration > 0) {
-        actualAttack -= player.originalAttackReductionValue || 0;
+    if (shouldUpdate('summary')) {
+        elements.name.textContent = player.name;
+        updateHealthMeter(prefix, player.health, player.maxHealth);
+        if (elements.skill && player.skill) {
+            elements.skill.textContent = `${player.skill.name} (${player.skill.description})`;
+        }
     }
 
-    // 应用防御相关临时效果
-    if (player.defenseBoostDuration > 0) {
-        actualDefense += player.skill?.defenseBoost || 0;
-    }
-    if (player.attackBoostDuration > 0) {
-        actualDefense -= player.skill?.defensePenalty || 0;
-    }
+    if (shouldUpdate('stats')) {
+        // 计算考虑临时效果后的实际属性值
+        let actualAttack = player.attack;
+        let actualDefense = player.defense;
+        let actualSpeed = player.speed;
 
-    // 应用速度相关临时效果
-    if (player.speedBoostDuration > 0) {
-        actualSpeed += player.skill?.speedBoost || 0;
-    }
+        // 应用攻击相关临时效果
+        if (player.attackBoostDuration > 0) {
+            actualAttack += player.skill?.attackBoost || 0;
+        }
+        if (player.attackReductionDuration > 0) {
+            actualAttack -= player.originalAttackReductionValue || 0;
+        }
 
-    // 更新UI显示，添加颜色区分临时效果
-    elements.attack.textContent = formatNumericDisplay(actualAttack);
-    elements.defense.textContent = formatNumericDisplay(actualDefense);
-    elements.speed.textContent = formatNumericDisplay(actualSpeed);
+        // 应用防御相关临时效果
+        if (player.defenseBoostDuration > 0) {
+            actualDefense += player.skill?.defenseBoost || 0;
+        }
+        if (player.attackBoostDuration > 0) {
+            actualDefense -= player.skill?.defensePenalty || 0;
+        }
 
-    // 如果有临时效果，改变显示颜色
-    elements.attack.style.color = (player.attackBoostDuration > 0 || player.attackReductionDuration > 0) ? '#FF9800' : '';
-    elements.defense.style.color = (player.defenseBoostDuration > 0 || player.attackBoostDuration > 0) ? '#FF9800' : '';
-    elements.speed.style.color = player.speedBoostDuration > 0 ? '#FF9800' : '';
+        // 应用速度相关临时效果
+        if (player.speedBoostDuration > 0) {
+            actualSpeed += player.skill?.speedBoost || 0;
+        }
 
-    const speedLabel = document.querySelector(`[data-speed-label="${prefix}"]`);
-    if (speedLabel) {
-        speedLabel.textContent = '加速';
-    }
+        elements.attack.textContent = formatNumericDisplay(actualAttack);
+        elements.defense.textContent = formatNumericDisplay(actualDefense);
+        elements.speed.textContent = formatNumericDisplay(actualSpeed);
 
-    elements.skill.textContent = `${player.skill.name} (${player.skill.description})`;
+        elements.attack.style.color = (player.attackBoostDuration > 0 || player.attackReductionDuration > 0) ? '#FF9800' : '';
+        elements.defense.style.color = (player.defenseBoostDuration > 0 || player.attackBoostDuration > 0) ? '#FF9800' : '';
+        elements.speed.style.color = player.speedBoostDuration > 0 ? '#FF9800' : '';
 
-    // 更新装备信息 - 使用DocumentFragment减少重排
-    const equipmentFragment = document.createDocumentFragment();
-
-    if (player.equipment) {
-        Object.entries(player.equipment).forEach(([type, item]) => {
-            if (!item) {
-                return;
-            }
-
-            const equipmentEntry = buildEquipmentTooltip(type, item);
-            equipmentFragment.appendChild(equipmentEntry);
-        });
+        const speedLabel = document.querySelector(`[data-speed-label="${prefix}"]`);
+        if (speedLabel) {
+            speedLabel.textContent = '加速';
+        }
     }
 
-    // 更新套装效果
-    if (player.setEffects && player.setEffects.activeSet) {
-        const setEffectDiv = document.createElement('div');
-        setEffectDiv.className = 'detail-entry set-effect-entry';
-        setEffectDiv.textContent = `套装：${player.setEffects.description} (装备了${player.setEffects.setCount}件)`;
-        equipmentFragment.appendChild(setEffectDiv);
+    if (shouldUpdate('equipment')) {
+        const equipmentFragment = document.createDocumentFragment();
+
+        if (player.equipment) {
+            Object.entries(player.equipment).forEach(([type, item]) => {
+                if (!item) {
+                    return;
+                }
+
+                const equipmentEntry = buildEquipmentTooltip(type, item);
+                equipmentFragment.appendChild(equipmentEntry);
+            });
+        }
+
+        if (player.setEffects && player.setEffects.activeSet) {
+            const setEffectDiv = document.createElement('div');
+            setEffectDiv.className = 'detail-entry set-effect-entry';
+            setEffectDiv.textContent = `套装：${player.setEffects.description} (装备了${player.setEffects.setCount}件)`;
+            equipmentFragment.appendChild(setEffectDiv);
+        }
+
+        elements.equipment.innerHTML = '';
+        if (equipmentFragment.childNodes.length > 0) {
+            elements.equipment.appendChild(equipmentFragment);
+        } else {
+            renderEmptyMessage(elements.equipment, '暂无装备');
+        }
     }
 
-    // 一次性更新装备DOM
-    elements.equipment.innerHTML = '';
-    if (equipmentFragment.childNodes.length > 0) {
-        elements.equipment.appendChild(equipmentFragment);
-    } else {
-        renderEmptyMessage(elements.equipment, '暂无装备');
-    }
+    if (shouldUpdate('status')) {
+        const statusEffects = [];
+        if (player.poison > 0) statusEffects.push(`中毒 (${player.poison}回合)`);
+        if (player.burn > 0) statusEffects.push(`燃烧 (${player.burn}回合)`);
+        if (player.freeze) statusEffects.push('冰冻');
+        if (player.taunted) statusEffects.push('嘲讽');
+        if (player.shield > 0) statusEffects.push(`护盾 (${player.shield})`);
+        if (player.critChance > 0.1) statusEffects.push(`会心提升 (${Math.floor((player.critChance - 0.1) * 100)}%)`);
+        if (player.reflection > 0) statusEffects.push(`反射伤害 (${Math.floor(player.reflection * 100)}%)`);
+        if (player.parryChance > 0) statusEffects.push(`招架率提升 (${Math.floor(player.parryChance * 100)}%)`);
 
-    // 更新状态效果 - 使用DocumentFragment减少重排
-    const statusEffects = [];
-    if (player.poison > 0) statusEffects.push(`中毒 (${player.poison}回合)`);
-    if (player.burn > 0) statusEffects.push(`燃烧 (${player.burn}回合)`);
-    if (player.freeze) statusEffects.push('冰冻');
-    if (player.taunted) statusEffects.push('嘲讽');
-    if (player.shield > 0) statusEffects.push(`护盾 (${player.shield})`);
-    if (player.critChance > 0.1) statusEffects.push(`会心提升 (${Math.floor((player.critChance - 0.1) * 100)}%)`);
-    if (player.reflection > 0) statusEffects.push(`反射伤害 (${Math.floor(player.reflection * 100)}%)`);
-    if (player.parryChance > 0) statusEffects.push(`招架率提升 (${Math.floor(player.parryChance * 100)}%)`);
-
-    const statusFragment = document.createDocumentFragment();
-    if (statusEffects.length > 0) {
-        statusEffects.forEach(effect => {
-            const effectDiv = document.createElement('div');
-            effectDiv.className = 'detail-entry status-item';
-            effectDiv.textContent = effect;
-            statusFragment.appendChild(effectDiv);
-        });
-        elements.status.innerHTML = '';
-        elements.status.appendChild(statusFragment);
-    } else {
-        renderEmptyMessage(elements.status, '无特殊状态');
+        const statusFragment = document.createDocumentFragment();
+        if (statusEffects.length > 0) {
+            statusEffects.forEach(effect => {
+                const effectDiv = document.createElement('div');
+                effectDiv.className = 'detail-entry status-item';
+                effectDiv.textContent = effect;
+                statusFragment.appendChild(effectDiv);
+            });
+            elements.status.innerHTML = '';
+            elements.status.appendChild(statusFragment);
+        } else {
+            renderEmptyMessage(elements.status, '无特殊状态');
+        }
     }
 }
 

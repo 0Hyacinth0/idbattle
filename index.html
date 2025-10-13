@@ -24,6 +24,231 @@
             <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
         </div>
 
+        <section class="growth-lab" data-player-growth aria-label="玩家养成系统">
+            <div class="growth-lab__header">
+                <h2>玩家养成实验室</h2>
+                <p class="growth-lab__hint">在这里分配属性点、安排装备与技能，保存成长数据后即可在战斗中使用。</p>
+            </div>
+            <div class="growth-lab__panels">
+                <article class="growth-panel" data-builder="p1" aria-label="玩家1养成">
+                    <header class="growth-panel__header">
+                        <h3>玩家1养成</h3>
+                        <div class="growth-panel__meta">
+                            <span class="growth-panel__name">目标名称：<strong data-role="builder-name">未指定</strong></span>
+                            <label class="growth-panel__saved" aria-label="加载玩家1历史配置">
+                                <span>快速加载</span>
+                                <select data-role="saved-player-select" data-target-input="player1"></select>
+                            </label>
+                        </div>
+                        <div class="growth-panel__points" aria-live="polite">
+                            剩余属性点：<span data-role="available-points">0</span> / <span data-role="total-points">0</span>
+                        </div>
+                    </header>
+
+                    <section class="growth-section" aria-label="属性点分配">
+                        <h4>属性点分配</h4>
+                        <div class="growth-attributes">
+                            <div class="attribute-row" data-attribute="health">
+                                <div class="attribute-row__label">生命</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="health" aria-label="降低生命属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="health" aria-label="提升生命属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="attack">
+                                <div class="attribute-row__label">攻击</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="attack" aria-label="降低攻击属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="attack" aria-label="提升攻击属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="defense">
+                                <div class="attribute-row__label">防御</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="defense" aria-label="降低防御属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="defense" aria-label="提升防御属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="speed">
+                                <div class="attribute-row__label">速度</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="speed" aria-label="降低速度属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="speed" aria-label="提升速度属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="growth-section" aria-label="装备背包">
+                        <h4>装备背包</h4>
+                        <div class="growth-equipment">
+                            <label>武器<select data-equip="WEAPON"></select></label>
+                            <label>上衣<select data-equip="ARMOR"></select></label>
+                            <label>帽子<select data-equip="HELMET"></select></label>
+                            <label>鞋子<select data-equip="BOOTS"></select></label>
+                            <label>精简<select data-equip="ACCESSORY"></select></label>
+                        </div>
+                        <div class="growth-equipment__preview" data-role="equipment-preview"></div>
+                    </section>
+
+                    <section class="growth-section" aria-label="技能管理">
+                        <h4>技能管理</h4>
+                        <div class="growth-skill">
+                            <label>选择技能<select data-role="skill-select"></select></label>
+                            <p class="growth-skill__default" data-role="default-skill-wrapper">默认技能：<span data-role="default-skill">-</span></p>
+                            <p class="growth-skill__description" data-role="skill-description">未选择技能</p>
+                        </div>
+                    </section>
+
+                    <section class="growth-section" aria-label="成长数据">
+                        <h4>成长数据</h4>
+                        <div class="growth-meta">
+                            <label>等级<input type="number" min="1" step="1" data-role="level"></label>
+                            <label>经验<input type="number" min="0" step="1" data-role="experience"></label>
+                            <label class="growth-meta__notes">成长笔记<textarea rows="3" maxlength="400" data-role="notes" placeholder="记录角色的成长规划或备注"></textarea></label>
+                        </div>
+                    </section>
+
+                    <footer class="growth-panel__actions">
+                        <button type="button" data-action="save-config">保存成长</button>
+                        <button type="button" data-action="reset-config">重置面板</button>
+                        <button type="button" data-action="remove-config">删除存档</button>
+                    </footer>
+                    <p class="growth-panel__status" data-role="status" aria-live="polite"></p>
+                </article>
+
+                <article class="growth-panel" data-builder="p2" aria-label="玩家2养成">
+                    <header class="growth-panel__header">
+                        <h3>玩家2养成</h3>
+                        <div class="growth-panel__meta">
+                            <span class="growth-panel__name">目标名称：<strong data-role="builder-name">未指定</strong></span>
+                            <label class="growth-panel__saved" aria-label="加载玩家2历史配置">
+                                <span>快速加载</span>
+                                <select data-role="saved-player-select" data-target-input="player2"></select>
+                            </label>
+                        </div>
+                        <div class="growth-panel__points" aria-live="polite">
+                            剩余属性点：<span data-role="available-points">0</span> / <span data-role="total-points">0</span>
+                        </div>
+                    </header>
+
+                    <section class="growth-section" aria-label="属性点分配">
+                        <h4>属性点分配</h4>
+                        <div class="growth-attributes">
+                            <div class="attribute-row" data-attribute="health">
+                                <div class="attribute-row__label">生命</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="health" aria-label="降低生命属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="health" aria-label="提升生命属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="attack">
+                                <div class="attribute-row__label">攻击</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="attack" aria-label="降低攻击属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="attack" aria-label="提升攻击属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="defense">
+                                <div class="attribute-row__label">防御</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="defense" aria-label="降低防御属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="defense" aria-label="提升防御属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                            <div class="attribute-row" data-attribute="speed">
+                                <div class="attribute-row__label">速度</div>
+                                <div class="attribute-row__base">基础 <span data-role="base">--</span></div>
+                                <div class="attribute-row__controls">
+                                    <button type="button" data-action="decrement" data-attribute="speed" aria-label="降低速度属性">-</button>
+                                    <span class="attribute-row__adjust" data-role="adjustment">0</span>
+                                    <button type="button" data-action="increment" data-attribute="speed" aria-label="提升速度属性">+</button>
+                                </div>
+                                <div class="attribute-row__equipment">装备加成 <span data-role="equipment">0</span></div>
+                                <div class="attribute-row__total">总计 <span data-role="total">--</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="growth-section" aria-label="装备背包">
+                        <h4>装备背包</h4>
+                        <div class="growth-equipment">
+                            <label>武器<select data-equip="WEAPON"></select></label>
+                            <label>上衣<select data-equip="ARMOR"></select></label>
+                            <label>帽子<select data-equip="HELMET"></select></label>
+                            <label>鞋子<select data-equip="BOOTS"></select></label>
+                            <label>精简<select data-equip="ACCESSORY"></select></label>
+                        </div>
+                        <div class="growth-equipment__preview" data-role="equipment-preview"></div>
+                    </section>
+
+                    <section class="growth-section" aria-label="技能管理">
+                        <h4>技能管理</h4>
+                        <div class="growth-skill">
+                            <label>选择技能<select data-role="skill-select"></select></label>
+                            <p class="growth-skill__default" data-role="default-skill-wrapper">默认技能：<span data-role="default-skill">-</span></p>
+                            <p class="growth-skill__description" data-role="skill-description">未选择技能</p>
+                        </div>
+                    </section>
+
+                    <section class="growth-section" aria-label="成长数据">
+                        <h4>成长数据</h4>
+                        <div class="growth-meta">
+                            <label>等级<input type="number" min="1" step="1" data-role="level"></label>
+                            <label>经验<input type="number" min="0" step="1" data-role="experience"></label>
+                            <label class="growth-meta__notes">成长笔记<textarea rows="3" maxlength="400" data-role="notes" placeholder="记录角色的成长规划或备注"></textarea></label>
+                        </div>
+                    </section>
+
+                    <footer class="growth-panel__actions">
+                        <button type="button" data-action="save-config">保存成长</button>
+                        <button type="button" data-action="reset-config">重置面板</button>
+                        <button type="button" data-action="remove-config">删除存档</button>
+                    </footer>
+                    <p class="growth-panel__status" data-role="status" aria-live="polite"></p>
+                </article>
+            </div>
+
+            <div class="growth-lab__storage" aria-label="成长数据导入导出">
+                <h3>成长数据导入 / 导出</h3>
+                <p class="growth-storage__hint">导出后可将文本保存为档案，导入时粘贴完整的JSON文本即可恢复所有玩家配置。</p>
+                <div class="growth-storage__controls">
+                    <button type="button" data-action="export-configs">导出到文本</button>
+                    <button type="button" data-action="import-configs">从文本导入</button>
+                </div>
+                <textarea rows="6" data-role="storage-text" placeholder="在此粘贴或复制成长配置JSON"></textarea>
+                <p class="growth-storage__status" data-role="storage-status" aria-live="polite"></p>
+            </div>
+        </section>
+
         <div class="battle-area">
             <div class="player-info player1-info" aria-live="polite">
                 <div class="player-card">
