@@ -1,19 +1,35 @@
 // 战斗服务模块
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+async function loadDefaultBalanceAdjustments() {
+    const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
-let defaultBalanceAdjustments = {};
-try {
-    const balanceConfigPath = resolve(__dirname, '../config/balanceAdjustments.json');
-    const fileContent = readFileSync(balanceConfigPath, 'utf-8');
-    defaultBalanceAdjustments = JSON.parse(fileContent);
-} catch (error) {
-    defaultBalanceAdjustments = {};
+    if (isBrowser) {
+        try {
+            const response = await fetch(new URL('../config/balanceAdjustments.json', import.meta.url));
+            if (!response.ok) {
+                throw new Error(`Unexpected response: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.warn('无法从前端环境加载平衡配置，使用内建默认值。', error);
+            return {};
+        }
+    }
+
+    try {
+        const { readFileSync } = await import('node:fs');
+        const { fileURLToPath } = await import('node:url');
+        const configUrl = new URL('../config/balanceAdjustments.json', import.meta.url);
+        const filePath = fileURLToPath(configUrl);
+        const fileContent = readFileSync(filePath, 'utf-8');
+        return JSON.parse(fileContent);
+    } catch (error) {
+        console.warn('读取本地平衡配置失败，将使用默认数值。', error);
+        return {};
+    }
 }
+
+const defaultBalanceAdjustments = await loadDefaultBalanceAdjustments();
 
 const BASE_BALANCE_ADJUSTMENTS = {
     attackAdvantageMitigation: 0.12,
