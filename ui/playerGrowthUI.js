@@ -106,8 +106,6 @@ function createDefaultState() {
         equipmentLoadout: {},
         skillOverride: '',
         metadata: {
-            level: 1,
-            experience: 0,
             availablePoints: TOTAL_ATTRIBUTE_POINTS
         }
     };
@@ -275,8 +273,6 @@ function getSkillByName(name) {
 
 function createDefaultMetadata() {
     return {
-        level: 1,
-        experience: 0,
         availablePoints: TOTAL_ATTRIBUTE_POINTS
     };
 }
@@ -296,6 +292,8 @@ function applyConfigToState(state, config) {
         ...(config?.metadata || {})
     };
     delete metadata.notes;
+    delete metadata.level;
+    delete metadata.experience;
     state.metadata = metadata;
     recalcAvailablePoints(state);
 }
@@ -397,16 +395,6 @@ function updatePanelUI(panel, playerKey) {
     if (skillDescription) {
         const selectedSkill = getSkillByName(state.skillOverride) || state.baseProfile?.defaultSkill;
         skillDescription.textContent = selectedSkill ? selectedSkill.description : '未选择技能';
-    }
-
-    const levelInput = panel.querySelector('[data-role="level"]');
-    if (levelInput) {
-        levelInput.value = state.metadata.level || 1;
-    }
-
-    const expInput = panel.querySelector('[data-role="experience"]');
-    if (expInput) {
-        expInput.value = state.metadata.experience || 0;
     }
 
     const defaultSkillWrapper = panel.querySelector('[data-role="default-skill-wrapper"]');
@@ -540,24 +528,6 @@ function handlePanelActions(panel, playerKey, root) {
 }
 
 function handleInputs(panel, playerKey) {
-    const levelInput = panel.querySelector('[data-role="level"]');
-    if (levelInput) {
-        levelInput.addEventListener('input', () => {
-            const state = builderState[playerKey];
-            const level = parseInt(levelInput.value, 10);
-            state.metadata.level = Number.isNaN(level) || level < 1 ? 1 : level;
-        });
-    }
-
-    const expInput = panel.querySelector('[data-role="experience"]');
-    if (expInput) {
-        expInput.addEventListener('input', () => {
-            const state = builderState[playerKey];
-            const exp = parseInt(expInput.value, 10);
-            state.metadata.experience = Number.isNaN(exp) || exp < 0 ? 0 : exp;
-        });
-    }
-
     const skillSelect = panel.querySelector('[data-role="skill-select"]');
     if (skillSelect) {
         populateSkillOptions(skillSelect);
