@@ -1,6 +1,6 @@
 // 主应用入口
-import { generateAttributes } from './models/player.js';
 import { BattleService } from './services/battleService.js';
+import { createPlayerDataService } from './services/dataAccess/playerDataService.js';
 import { updatePlayerInfo, initPlayerPanels } from './ui/playerUI.js';
 import { displayBattleLog, resetBattleLog } from './ui/logUI.js';
 import { EquipmentType, equipmentList, setEffects, equipmentByType } from './models/equipment.js';
@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const battleBtn = document.getElementById('battle-btn');
     const formError = document.getElementById('form-error');
     const battleService = new BattleService();
+    const playerDataService = createPlayerDataService();
     let isBattleRunning = false;
 
     const viewSwitcher = document.querySelector('[data-role="view-switcher"]');
@@ -102,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const player1Customization = getPlayerConfig(player1Name) || undefined;
             const player2Customization = getPlayerConfig(player2Name) || undefined;
 
-            const player1 = generateAttributes(player1Name, player1Customization);
-            const player2 = generateAttributes(player2Name, player2Customization);
+            const player1 = await playerDataService.getPlayerProfile(player1Name, { customization: player1Customization });
+            const player2 = await playerDataService.getPlayerProfile(player2Name, { customization: player2Customization });
 
             battleService.setPlayers(player1, player2, updatePlayerInfo);
 
