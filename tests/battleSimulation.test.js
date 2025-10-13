@@ -180,3 +180,42 @@ test('equipment stacking and skill effects remain consistent through combat flow
     assert.equal(playerWithEquipment.attack, originalAttack, 'attack should revert after boost duration expires');
     assert.equal(playerWithEquipment.defense, originalDefense, 'defense penalty should be removed when duration ends');
 });
+
+test('multiple set bonuses combine without overriding each other', () => {
+    const equipment = {
+        slot1: { name: '力道武器', set: '力道', attributes: { attack: 10 } },
+        slot2: { name: '力道护具', set: '力道', attributes: { defense: 4 } },
+        slot3: { name: '体质胸甲', set: '体质', attributes: { health: 60, defense: 6 } },
+        slot4: { name: '体质护腿', set: '体质', attributes: { health: 40 } },
+        slot5: { name: '身法长靴', set: '身法', attributes: { speed: 8, attack: 3 } },
+        slot6: { name: '身法腰带', set: '身法', attributes: { speed: 4 } }
+    };
+
+    const basePlayer = createBasePlayer('多套装', {
+        attack: 50,
+        defense: 20,
+        health: 300,
+        maxHealth: 300,
+        speed: 30,
+        critChance: 0.1,
+        parryChance: 0.05,
+        skill: { name: '无想心法', chance: 0 }
+    });
+
+    const enhancedPlayer = applyEquipmentAttributes(basePlayer, equipment);
+
+    assert.equal(enhancedPlayer.attack, 72, 'attack should reflect stacked multipliers from 力道和身法套装');
+    assert.equal(enhancedPlayer.defense, 32, 'defense should reflect bonuses from 力道与体质套装');
+    assert.equal(enhancedPlayer.health, 420, 'health should include体质套装倍率');
+    assert.equal(enhancedPlayer.speed, 42, 'speed should include身法套装倍率并在软上限后取整');
+    assert.ok(enhancedPlayer.validationAdjustments.speed, 'speed should record a soft-cap adjustment');
+    assert.ok(
+        enhancedPlayer.validationAdjustments.speed.original > enhancedPlayer.speed,
+        'speed soft cap should reduce the post-multiplier value slightly'
+    );
+    assert.ok(Math.abs(enhancedPlayer.critChance - 0.12) < 1e-9, 'crit chance should add身法套装加成');
+    assert.ok(Math.abs(enhancedPlayer.parryChance - 0.07) < 1e-9, 'parry chance should add体质套装加成');
+
+    const activeSetSummary = enhancedPlayer.setEffects?.activeSets?.map(set => set.name).sort();
+    assert.deepEqual(activeSetSummary, ['体质', '力道', '身法'], 'all active set bonuses should be tracked separately');
+});

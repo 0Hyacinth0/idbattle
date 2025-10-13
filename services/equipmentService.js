@@ -3,7 +3,6 @@ import { validateAttributes } from '../utils/validation.js';
 
 function calculateSetEffects(equipment) {
     const setCounts = new Map();
-    let effects = {};
 
     Object.values(equipment).forEach(item => {
         if (item && item.set) {
@@ -11,23 +10,90 @@ function calculateSetEffects(equipment) {
         }
     });
 
+    const cumulative = {
+        attackMultiplier: 1,
+        defenseMultiplier: 1,
+        healthMultiplier: 1,
+        speedMultiplier: 1,
+        critChance: 0,
+        parryChance: 0
+    };
+    const activeSets = [];
+
     for (const [setName, count] of setCounts) {
         const effectConfig = setEffects[setName];
         if (!effectConfig) continue;
 
         let effectLevel = 0;
-        if (count >= 4) {
+        if (count >= 4 && effectConfig[4]) {
             effectLevel = 4;
-        } else if (count >= 2) {
+        } else if (count >= 2 && effectConfig[2]) {
             effectLevel = 2;
         }
 
-        if (effectLevel > 0 && effectConfig[effectLevel]) {
-            effects = { ...effects, ...effectConfig[effectLevel], activeSet: setName, setCount: count, effectLevel };
+        if (!effectLevel) {
+            continue;
         }
+
+        const effect = effectConfig[effectLevel];
+        if (!effect) {
+            continue;
+        }
+
+        if (typeof effect.attackMultiplier === 'number') {
+            cumulative.attackMultiplier *= effect.attackMultiplier;
+        }
+        if (typeof effect.defenseMultiplier === 'number') {
+            cumulative.defenseMultiplier *= effect.defenseMultiplier;
+        }
+        if (typeof effect.healthMultiplier === 'number') {
+            cumulative.healthMultiplier *= effect.healthMultiplier;
+        }
+        if (typeof effect.speedMultiplier === 'number') {
+            cumulative.speedMultiplier *= effect.speedMultiplier;
+        }
+        if (typeof effect.critChance === 'number') {
+            cumulative.critChance += effect.critChance;
+        }
+        if (typeof effect.parryChance === 'number') {
+            cumulative.parryChance += effect.parryChance;
+        }
+
+        activeSets.push({
+            name: setName,
+            description: effect.description || `${setName}套装(${effectLevel}件)`,
+            effectLevel,
+            count,
+            bonuses: effect
+        });
     }
 
-    return effects;
+    const result = {};
+
+    if (activeSets.length > 0) {
+        result.activeSets = activeSets;
+    }
+
+    if (cumulative.attackMultiplier !== 1) {
+        result.attackMultiplier = cumulative.attackMultiplier;
+    }
+    if (cumulative.defenseMultiplier !== 1) {
+        result.defenseMultiplier = cumulative.defenseMultiplier;
+    }
+    if (cumulative.healthMultiplier !== 1) {
+        result.healthMultiplier = cumulative.healthMultiplier;
+    }
+    if (cumulative.speedMultiplier !== 1) {
+        result.speedMultiplier = cumulative.speedMultiplier;
+    }
+    if (cumulative.critChance !== 0) {
+        result.critChance = cumulative.critChance;
+    }
+    if (cumulative.parryChance !== 0) {
+        result.parryChance = cumulative.parryChance;
+    }
+
+    return result;
 }
 
 function applyEquipmentAttributes(player, equipment) {
