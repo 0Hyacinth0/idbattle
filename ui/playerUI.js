@@ -280,7 +280,16 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
             });
         }
 
-        if (player.setEffects && player.setEffects.activeSet) {
+        if (player.setEffects?.activeSets?.length) {
+            player.setEffects.activeSets.forEach(setEffect => {
+                const setEffectDiv = document.createElement('div');
+                setEffectDiv.className = 'detail-entry set-effect-entry';
+                const equippedCount = typeof setEffect.count === 'number' ? setEffect.count : setEffect.setCount;
+                const description = setEffect.description || setEffect.bonuses?.description || `${setEffect.name || setEffect.activeSet}套装`;
+                setEffectDiv.textContent = `套装：${description}${equippedCount ? ` (装备了${equippedCount}件)` : ''}`;
+                equipmentFragment.appendChild(setEffectDiv);
+            });
+        } else if (player.setEffects && player.setEffects.activeSet) {
             const setEffectDiv = document.createElement('div');
             setEffectDiv.className = 'detail-entry set-effect-entry';
             setEffectDiv.textContent = `套装：${player.setEffects.description} (装备了${player.setEffects.setCount}件)`;
