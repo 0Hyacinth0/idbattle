@@ -1,5 +1,5 @@
 import simpleMD5 from '../utils/md5.js';
-import { EquipmentType, equipmentByType, getEquipmentByName } from './equipment.js';
+import { EquipmentType, equipmentByType, getEquipmentByName, createEquipmentInstance } from './equipment.js';
 import skills from './skills.js';
 import { applyEquipmentAttributes } from '../services/equipmentService.js';
 import { validateAttributes, mergeAttributes } from '../utils/validation.js';
@@ -32,6 +32,8 @@ function generateBaseTemplate(name) {
             attack: sanitized.attack,
             defense: sanitized.defense,
             speed: sanitized.speed,
+            level: 1,
+            experience: 0,
             skill: defaultSkill,
             poison: 0,
             burn: 0,
@@ -105,20 +107,35 @@ function generateEquipment(playerName, customization = {}) {
 
     equipmentTypes.forEach((type, index) => {
         const typeKey = typeKeyByLabel[type];
-        const overrideName = equipmentLoadout[typeKey] || equipmentLoadout[type];
-        let equipmentItem = overrideName ? getEquipmentByName(overrideName) : null;
+        const overrideConfig = equipmentLoadout[typeKey] ?? equipmentLoadout[type];
+        let overrideName = null;
+        let overrideEnhancement = undefined;
 
-        if (!equipmentItem) {
+        if (typeof overrideConfig === 'string') {
+            overrideName = overrideConfig;
+        } else if (overrideConfig && typeof overrideConfig === 'object') {
+            overrideName = overrideConfig.name ?? overrideConfig.equipmentName ?? null;
+            if (typeof overrideConfig.enhancementLevel === 'number') {
+                overrideEnhancement = overrideConfig.enhancementLevel;
+            }
+        }
+
+        const baseOverride = overrideName ? getEquipmentByName(overrideName) : null;
+
+        let baseItem = baseOverride;
+        if (!baseItem) {
             const available = equipmentByType[type] || [];
             if (available.length === 0) {
                 return;
             }
             const startIndex = (index * 2) % (md5.length - 1);
             const equipmentIndex = parseInt(md5.substr(startIndex, 2), 16) % available.length;
-            equipmentItem = available[equipmentIndex];
+            baseItem = available[equipmentIndex];
+            overrideEnhancement = undefined;
         }
 
-        equipment[type] = cloneEquipmentItem(equipmentItem);
+        const equipmentInstance = createEquipmentInstance(baseItem, overrideEnhancement);
+        equipment[type] = cloneEquipmentItem(equipmentInstance);
     });
 
     return equipment;

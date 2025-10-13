@@ -32,6 +32,18 @@
     image-rendering: pixelated;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 @font-face {
     font-family: 'PixelFont';
     src: url('https://fonts.cdnfonts.com/css/common-pixel') format('truetype');
@@ -355,6 +367,25 @@ button:disabled {
     gap: 10px;
 }
 
+.growth-attributes__header {
+    display: grid;
+    grid-template-columns: minmax(90px, 110px) repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0 12px;
+    margin-bottom: 4px;
+    font-size: var(--font-size-label);
+    color: var(--text-muted);
+    letter-spacing: 0.08rem;
+}
+
+.growth-attributes__header span:first-child {
+    justify-self: start;
+}
+
+.growth-attributes__header span:not(:first-child) {
+    text-align: center;
+}
+
 .attribute-row {
     display: grid;
     grid-template-columns: minmax(90px, 110px) repeat(4, minmax(0, 1fr));
@@ -374,6 +405,7 @@ button:disabled {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    justify-content: center;
 }
 
 .attribute-row__controls button {
@@ -388,6 +420,7 @@ button:disabled {
 .attribute-row__adjust {
     min-width: 48px;
     text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 .attribute-row__equipment,
@@ -395,6 +428,7 @@ button:disabled {
 .attribute-row__base {
     font-size: var(--font-size-small);
     color: var(--text-muted);
+    text-align: center;
 }
 
 .attribute-row__total span,
@@ -417,6 +451,36 @@ button:disabled {
     gap: 6px;
     font-size: var(--font-size-small);
     color: var(--text-muted);
+}
+
+.equipment-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.equipment-refine {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.equipment-refine span {
+    letter-spacing: 0.1rem;
+}
+
+.equipment-refine input {
+    width: 56px;
+    padding: 6px 8px;
+    font-size: var(--font-size-xs);
+    text-align: center;
+}
+
+.equipment-refine input:disabled {
+    opacity: 0.45;
 }
 
 .growth-equipment__preview {
@@ -477,8 +541,11 @@ button:disabled {
     gap: 12px;
 }
 
-.growth-meta__notes textarea {
-    min-height: 120px;
+.growth-meta__hint {
+    margin-top: 6px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    line-height: 1.5;
 }
 
 .growth-panel__actions {
@@ -528,6 +595,10 @@ button:disabled {
     .attribute-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-auto-rows: auto;
+    }
+
+    .growth-attributes__header {
+        display: none;
     }
 
     .attribute-row__label {
@@ -592,12 +663,27 @@ button:disabled {
     min-width: 140px;
 }
 
+.summary-block--progress {
+    align-content: center;
+    gap: 4px;
+}
+
 .summary-block--name {
     align-content: start;
 }
 
 .summary-block--name .summary-value {
     font-size: calc(var(--font-size-small) + 0.05rem);
+}
+
+.summary-subvalue {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    letter-spacing: 0.08rem;
+}
+
+.summary-subvalue span {
+    color: var(--accent-green);
 }
 
 .summary-block--name .summary-health {

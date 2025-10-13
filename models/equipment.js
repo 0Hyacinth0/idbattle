@@ -43,23 +43,21 @@ for (const item of equipmentConfig) {
         continue;
     }
 
-    const normalizedEnhancementLevel = normalizeEnhancementLevel(item.enhancementLevel);
-    const normalizedAttributes = calculateAttributeWithEnhancement(item.attributes, item.quality, normalizedEnhancementLevel);
-    const equipmentItem = {
+    const baseItem = {
         name: item.name,
         type,
         typeKey: item.typeKey,
         set: item.set,
         quality: item.quality,
-        enhancementLevel: normalizedEnhancementLevel,
-        attributes: normalizedAttributes
+        defaultEnhancementLevel: normalizeEnhancementLevel(item.enhancementLevel),
+        baseAttributes: { ...item.attributes }
     };
 
-    equipmentList[item.name] = equipmentItem;
+    equipmentList[item.name] = baseItem;
     if (!equipmentByType[type]) {
         equipmentByType[type] = [];
     }
-    equipmentByType[type].push(equipmentItem);
+    equipmentByType[type].push(baseItem);
 }
 
 const setEffects = {};
@@ -67,8 +65,42 @@ setConfig.forEach(set => {
     setEffects[set.name] = set.effects;
 });
 
-function getEquipmentByName(name) {
-    return equipmentList[name];
+function createEquipmentInstance(baseItem, enhancementLevel) {
+    if (!baseItem) {
+        return null;
+    }
+
+    const level = typeof enhancementLevel === 'number'
+        ? normalizeEnhancementLevel(enhancementLevel)
+        : baseItem.defaultEnhancementLevel;
+
+    return {
+        name: baseItem.name,
+        type: baseItem.type,
+        typeKey: baseItem.typeKey,
+        set: baseItem.set,
+        quality: baseItem.quality,
+        enhancementLevel: level,
+        attributes: calculateAttributeWithEnhancement(baseItem.baseAttributes, baseItem.quality, level)
+    };
 }
 
-export { EquipmentType, equipmentList, setEffects, equipmentByType, getEquipmentByName };
+function getEquipmentByName(name) {
+    return equipmentList[name] || null;
+}
+
+function getEquipmentWithEnhancement(name, enhancementLevel) {
+    const baseItem = getEquipmentByName(name);
+    return createEquipmentInstance(baseItem, enhancementLevel);
+}
+
+export {
+    EquipmentType,
+    equipmentList,
+    setEffects,
+    equipmentByType,
+    getEquipmentByName,
+    getEquipmentWithEnhancement,
+    createEquipmentInstance,
+    MAX_ENHANCEMENT_LEVEL
+};
