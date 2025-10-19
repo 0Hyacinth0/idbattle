@@ -62,11 +62,6 @@ function cloneConfig(config) {
     return JSON.parse(JSON.stringify(config));
 }
 
-function loadPlayerConfigs() {
-    const store = readRawStore();
-    return Object.fromEntries(Object.entries(store).map(([key, value]) => [key, { ...value, config: cloneConfig(value.config) }]));
-}
-
 function listPlayerConfigs() {
     const store = readRawStore();
     return Object.values(store)
@@ -196,7 +191,6 @@ function subscribeToPlayerConfigs(callback) {
 }
 
 export {
-    loadPlayerConfigs,
     listPlayerConfigs,
     getPlayerConfig,
     savePlayerConfig,
