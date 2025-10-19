@@ -1,7 +1,7 @@
 export const setConfig = [
     {
         name: '根骨',
-        quality: 'legendary',
+        quality: '稀世',
         bonusType: 'defensive',
         effects: {
             2: { description: '根骨套装(2件) - 增加 8% 防御力和 5% 生命值', defenseMultiplier: 1.08, healthMultiplier: 1.05 },
@@ -10,7 +10,7 @@ export const setConfig = [
     },
     {
         name: '力道',
-        quality: 'epic',
+        quality: '珍奇',
         bonusType: 'offensive',
         effects: {
             2: { description: '力道套装(2件) - 增加 10% 攻击力和 2% 防御力', attackMultiplier: 1.1, defenseMultiplier: 1.02 },
@@ -19,7 +19,7 @@ export const setConfig = [
     },
     {
         name: '元气',
-        quality: 'epic',
+        quality: '卓越',
         bonusType: 'speed',
         effects: {
             2: { description: '元气套装(2件) - 增加 10% 攻击力和 5% 加速', attackMultiplier: 1.1, speedMultiplier: 1.05 },
@@ -28,7 +28,7 @@ export const setConfig = [
     },
     {
         name: '身法',
-        quality: 'rare',
+        quality: '精巧',
         bonusType: 'crit',
         effects: {
             2: { description: '身法套装(2件) - 增加 5% 攻击力、5% 加速和 2% 会心几率', attackMultiplier: 1.05, speedMultiplier: 1.05, critChance: 0.02 },
@@ -37,7 +37,7 @@ export const setConfig = [
     },
     {
         name: '体质',
-        quality: 'rare',
+        quality: '普通',
         bonusType: 'survivability',
         effects: {
             2: { description: '体质套装(2件) - 增加 5% 防御力、5% 生命值和 2% 招架几率', defenseMultiplier: 1.05, healthMultiplier: 1.05, parryChance: 0.02 },

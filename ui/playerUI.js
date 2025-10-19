@@ -48,17 +48,11 @@ const ATTRIBUTE_LABELS = {
 
 const RARITY_STYLES = {
     '破败': { color: '#8f93a3', label: '破败' },
-    poor: { color: '#8f93a3', label: '破败' },
     '普通': { color: '#f4f1ff', label: '普通' },
-    common: { color: '#f4f1ff', label: '普通' },
     '精巧': { color: '#6dd39e', label: '精巧' },
-    uncommon: { color: '#6dd39e', label: '精巧' },
     '卓越': { color: '#59a6ff', label: '卓越' },
-    rare: { color: '#59a6ff', label: '卓越' },
     '珍奇': { color: '#c282ff', label: '珍奇' },
-    epic: { color: '#c282ff', label: '珍奇' },
-    '稀世': { color: '#ff9b52', label: '稀世' },
-    legendary: { color: '#ff9b52', label: '稀世' }
+    '稀世': { color: '#ff9b52', label: '稀世' }
 };
 
 function getRarityStyle(quality) {
@@ -67,8 +61,7 @@ function getRarityStyle(quality) {
     }
 
     const trimmed = `${quality}`.trim();
-    const lowerCase = trimmed.toLowerCase();
-    return RARITY_STYLES[trimmed] || RARITY_STYLES[lowerCase] || null;
+    return RARITY_STYLES[trimmed] || null;
 }
 
 function createTooltipLine(text, className) {

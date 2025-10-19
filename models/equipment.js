@@ -10,10 +10,12 @@ const EquipmentType = {
 };
 
 const QUALITY_MULTIPLIERS = {
-    legendary: 1.08,
-    epic: 1.05,
-    rare: 1.03,
-    common: 1
+    '破败': 0.92,
+    '普通': 1,
+    '精巧': 1.06,
+    '卓越': 1.12,
+    '珍奇': 1.18,
+    '稀世': 1.25
 };
 
 const MAX_ENHANCEMENT_LEVEL = 6;
@@ -34,6 +36,31 @@ function calculateAttributeWithEnhancement(attributes, quality, enhancementLevel
     );
 }
 
+function deriveEnhancementLevelFromHash(hash, typeKey, itemName) {
+    if (typeof hash !== 'string' || hash.length < 2) {
+        return 0;
+    }
+
+    const typeSegment = typeof typeKey === 'string' ? typeKey : '';
+    const nameSegment = typeof itemName === 'string' ? itemName : '';
+    const seedSource = `${typeSegment}:${nameSegment}`;
+
+    let seed = 0;
+    for (let i = 0; i < seedSource.length; i += 1) {
+        seed = (seed + seedSource.charCodeAt(i)) & 0xff;
+    }
+
+    const startIndex = seed % (hash.length - 1);
+    const slice = hash.substr(startIndex, 2);
+    const value = Number.parseInt(slice, 16);
+
+    if (Number.isNaN(value)) {
+        return 0;
+    }
+
+    return normalizeEnhancementLevel(value % (MAX_ENHANCEMENT_LEVEL + 1));
+}
+
 const equipmentList = {};
 const equipmentByType = {};
 
@@ -49,7 +76,6 @@ for (const item of equipmentConfig) {
         typeKey: item.typeKey,
         set: item.set,
         quality: item.quality,
-        defaultEnhancementLevel: normalizeEnhancementLevel(item.enhancementLevel),
         baseAttributes: { ...item.attributes }
     };
 
@@ -72,7 +98,7 @@ function createEquipmentInstance(baseItem, enhancementLevel) {
 
     const level = typeof enhancementLevel === 'number'
         ? normalizeEnhancementLevel(enhancementLevel)
-        : baseItem.defaultEnhancementLevel;
+        : 0;
 
     return {
         name: baseItem.name,
@@ -102,5 +128,6 @@ export {
     getEquipmentByName,
     getEquipmentWithEnhancement,
     createEquipmentInstance,
-    MAX_ENHANCEMENT_LEVEL
+    MAX_ENHANCEMENT_LEVEL,
+    deriveEnhancementLevelFromHash
 };

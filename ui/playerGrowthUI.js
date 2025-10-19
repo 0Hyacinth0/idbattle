@@ -4,7 +4,8 @@ import {
     equipmentByType,
     equipmentList,
     getEquipmentWithEnhancement,
-    MAX_ENHANCEMENT_LEVEL
+    MAX_ENHANCEMENT_LEVEL,
+    deriveEnhancementLevelFromHash
 } from '../models/equipment.js';
 import skills from '../models/skills.js';
 import {
@@ -49,6 +50,13 @@ function clampEnhancement(level, fallback = 0) {
     return Math.min(Math.max(parsed, 0), MAX_ENHANCEMENT_LEVEL);
 }
 
+function resolveDefaultEnhancement(baseItem, state, typeKey) {
+    if (!baseItem || !state?.baseProfile?.md5) {
+        return 0;
+    }
+    return deriveEnhancementLevelFromHash(state.baseProfile.md5, typeKey, baseItem.name);
+}
+
 function normalizeEquipmentSelection(selection) {
     if (!selection) {
         return null;
@@ -61,7 +69,7 @@ function normalizeEquipmentSelection(selection) {
         }
         return {
             name: baseItem.name,
-            enhancementLevel: clampEnhancement(baseItem.defaultEnhancementLevel, 0)
+            enhancementLevel: null
         };
     }
 
@@ -71,8 +79,8 @@ function normalizeEquipmentSelection(selection) {
             return null;
         }
         const baseItem = equipmentList[name];
-        const fallback = clampEnhancement(baseItem.defaultEnhancementLevel, 0);
-        const level = clampEnhancement(selection.enhancementLevel, fallback);
+        const hasLevel = typeof selection.enhancementLevel === 'number';
+        const level = hasLevel ? clampEnhancement(selection.enhancementLevel, 0) : null;
         return {
             name: baseItem.name,
             enhancementLevel: level
@@ -140,13 +148,21 @@ function formatSigned(value) {
     return '0';
 }
 
-function computeEquipmentBonus(equipmentLoadout) {
+function computeEquipmentBonus(equipmentLoadout, state) {
     const bonuses = {};
-    Object.values(equipmentLoadout || {}).forEach(selection => {
+    Object.entries(equipmentLoadout || {}).forEach(([typeKey, selection]) => {
         if (!selection || !selection.name) {
             return;
         }
-        const item = getEquipmentWithEnhancement(selection.name, selection.enhancementLevel);
+        const baseItem = equipmentList[selection.name];
+        if (!baseItem) {
+            return;
+        }
+        const fallbackLevel = resolveDefaultEnhancement(baseItem, state, typeKey);
+        const level = typeof selection.enhancementLevel === 'number'
+            ? clampEnhancement(selection.enhancementLevel, fallbackLevel)
+            : fallbackLevel;
+        const item = getEquipmentWithEnhancement(selection.name, level);
         if (!item || !item.attributes) {
             return;
         }
@@ -230,7 +246,12 @@ function renderEquipmentPreview(panel, state) {
         if (!selection || !selection.name) {
             return;
         }
-        const item = getEquipmentWithEnhancement(selection.name, selection.enhancementLevel);
+        const baseItem = equipmentList[selection.name];
+        const fallbackLevel = resolveDefaultEnhancement(baseItem, state, typeKey);
+        const level = typeof selection.enhancementLevel === 'number'
+            ? clampEnhancement(selection.enhancementLevel, fallbackLevel)
+            : fallbackLevel;
+        const item = getEquipmentWithEnhancement(selection.name, level);
         if (!item) {
             return;
         }
@@ -326,7 +347,7 @@ function updatePanelUI(panel, playerKey) {
     }
     recalcAvailablePoints(state);
     const basePlayer = state.baseProfile?.basePlayer || {};
-    const equipmentBonus = computeEquipmentBonus(state.equipmentLoadout);
+    const equipmentBonus = computeEquipmentBonus(state.equipmentLoadout, state);
 
     const nameDisplay = panel.querySelector('[data-role="builder-name"]');
     if (nameDisplay) {
@@ -414,7 +435,7 @@ function updatePanelUI(panel, playerKey) {
         const levelInput = panel.querySelector(`[data-equip-level="${typeKey}"]`);
         if (levelInput) {
             const baseItem = selection?.name ? equipmentList[selection.name] : null;
-            const defaultLevel = baseItem?.defaultEnhancementLevel ?? 0;
+            const defaultLevel = resolveDefaultEnhancement(baseItem, state, typeKey);
             const levelValue = typeof selection?.enhancementLevel === 'number'
                 ? selection.enhancementLevel
                 : defaultLevel;
@@ -475,7 +496,7 @@ function handlePanelActions(panel, playerKey, root) {
                     return;
                 }
                 const baseItem = equipmentList[value.name];
-                const fallback = baseItem?.defaultEnhancementLevel ?? 0;
+                const fallback = resolveDefaultEnhancement(baseItem, state, typeKey);
                 normalizedLoadout[typeKey] = {
                     name: value.name,
                     enhancementLevel: clampEnhancement(value.enhancementLevel, fallback)
@@ -549,7 +570,7 @@ function handleInputs(panel, playerKey) {
             const value = select.value;
             if (value) {
                 const baseItem = equipmentList[value];
-                const defaultLevel = baseItem?.defaultEnhancementLevel ?? 0;
+                const defaultLevel = resolveDefaultEnhancement(baseItem, state, typeKey);
                 const previous = state.equipmentLoadout[typeKey];
                 const shouldKeepLevel = previous && previous.name === value;
                 const nextLevel = shouldKeepLevel ? previous.enhancementLevel : defaultLevel;
@@ -572,7 +593,7 @@ function handleInputs(panel, playerKey) {
                     return;
                 }
                 const baseItem = equipmentList[selection.name];
-                const fallback = baseItem?.defaultEnhancementLevel ?? 0;
+                const fallback = resolveDefaultEnhancement(baseItem, state, typeKey);
                 selection.enhancementLevel = clampEnhancement(levelInput.value, fallback);
                 updatePanelUI(panel, playerKey);
             });
