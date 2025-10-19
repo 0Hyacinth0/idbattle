@@ -1,5 +1,5 @@
 import simpleMD5 from '../utils/md5.js';
-import { EquipmentType, equipmentByType, getEquipmentByName, createEquipmentInstance } from './equipment.js';
+import { EquipmentType, equipmentByType, getEquipmentByName, createEquipmentInstance, deriveEnhancementLevelFromHash } from './equipment.js';
 import skills from './skills.js';
 import { applyEquipmentAttributes } from '../services/equipmentService.js';
 import { validateAttributes, mergeAttributes } from '../utils/validation.js';
@@ -132,7 +132,11 @@ function generateEquipment(playerName, customization = {}) {
             overrideEnhancement = undefined;
         }
 
-        const equipmentInstance = createEquipmentInstance(baseItem, overrideEnhancement);
+        const hashedLevel = deriveEnhancementLevelFromHash(md5, typeKey, baseItem?.name);
+        const equipmentInstance = createEquipmentInstance(
+            baseItem,
+            typeof overrideEnhancement === 'number' ? overrideEnhancement : hashedLevel
+        );
         equipment[type] = cloneEquipmentItem(equipmentInstance);
     });
 
