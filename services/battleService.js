@@ -6,6 +6,8 @@ export class BattleService {
         this.p1Stunned = false;
         this.p2Stunned = false;
         this.updatePlayerInfoCallback = null;
+        this.eventHandlers = {};
+        this.randomFn = Math.random;
     }
 
     setPlayers(player1, player2, updateCallback) {
@@ -14,6 +16,37 @@ export class BattleService {
         this.p1Stunned = false;
         this.p2Stunned = false;
         this.updatePlayerInfoCallback = updateCallback;
+    }
+
+    setEventHandlers(handlers = {}) {
+        this.eventHandlers = { ...handlers };
+    }
+
+    emitEvent(eventName, payload) {
+        const handler = this.eventHandlers?.[eventName];
+        if (typeof handler === 'function') {
+            handler(payload);
+        }
+    }
+
+    setRandomGenerator(randomFn) {
+        if (typeof randomFn === 'function') {
+            this.randomFn = randomFn;
+        } else {
+            this.randomFn = Math.random;
+        }
+    }
+
+    random() {
+        try {
+            const value = this.randomFn?.();
+            if (typeof value === 'number' && value >= 0 && value <= 1) {
+                return value;
+            }
+        } catch (error) {
+            // ignore and fall back to Math.random
+        }
+        return Math.random();
     }
 
     updatePlayerUI() {
@@ -30,9 +63,11 @@ export class BattleService {
         this.p1Stunned = false;
         this.p2Stunned = false;
 
+        this.emitEvent('onBattleStart', { player1: this.player1, player2: this.player2 });
         this.appendLog(log, logCallback, '=======================================', '战斗开始!');
 
         while (this.playersAlive()) {
+            this.emitEvent('onRoundStart', { round });
             this.appendLog(log, logCallback, `\n第 ${round} 回合:`);
             round++;
 
@@ -68,17 +103,28 @@ export class BattleService {
             }
         }
 
-        const winnerMessage = (this.player1.health <= 0 && this.player2.health <= 0)
+        const bothDefeated = this.player1.health <= 0 && this.player2.health <= 0;
+        const winner = bothDefeated ? null : (this.player1.health > this.player2.health ? this.player1 : this.player2);
+        const roundsCompleted = Math.max(0, round - 1);
+        const winnerMessage = bothDefeated
             ? '双方同归于尽! 平局!'
-            : `${(this.player1.health > this.player2.health ? this.player1 : this.player2).name} 胜利!`;
+            : `${winner.name} 胜利!`;
         this.appendLog(log, logCallback, '=======================================', winnerMessage);
+        this.emitEvent('onBattleEnd', {
+            winner,
+            isDraw: !winner,
+            rounds: roundsCompleted,
+            player1: this.player1,
+            player2: this.player2,
+            log: log.join('\n')
+        });
         return log.join('\n');
     }
 
     getAttackOrder() {
         const speedDiff = Math.abs(this.player1.speed - this.player2.speed);
         if (speedDiff < 1) {
-            return Math.random() < 0.5 ? [this.player1, this.player2] : [this.player2, this.player1];
+            return this.random() < 0.5 ? [this.player1, this.player2] : [this.player2, this.player1];
         }
         return this.player1.speed >= this.player2.speed
             ? [this.player1, this.player2]
@@ -130,6 +176,10 @@ export class BattleService {
 
     attackEnemy(attacker, defender) {
         const log = [];
+        const defenderHealthInitial = defender.health;
+        const attackerHealthInitial = attacker.health;
+        let shieldAbsorb = 0;
+        let reflectionDamage = 0;
 
         if (attacker.freeze) {
             log.push(`${attacker.name}被冰冻了，无法攻击且无法触发技能!`);
@@ -150,14 +200,14 @@ export class BattleService {
         damage = Math.max(damage, 1);
 
         let isCritical = false;
-        if (Math.random() < attacker.critChance) {
+        if (this.random() < attacker.critChance) {
             isCritical = true;
             damage = Math.floor(damage * 1.5);
             log.push(`${attacker.name} 触发了会心! 伤害提升至 ${damage}`);
         }
 
         const parryChance = defender.parryChance || 0;
-        if (Math.random() < parryChance) {
+        if (this.random() < parryChance) {
             log.push(`${defender.name} 触发了招架! 完全免疫本次伤害!`);
             damage = 0;
         }
@@ -165,7 +215,7 @@ export class BattleService {
         let skillTriggered = false;
         if (!attacker.taunted) {
             const skillChance = attacker.skill.chance || 0.1;
-            skillTriggered = Math.random() < skillChance;
+            skillTriggered = this.random() < skillChance;
         } else {
             log.push(`${attacker.name} 被嘲讽了，无法触发技能!`);
         }
@@ -193,7 +243,7 @@ export class BattleService {
                 attacker.health = Math.min(attacker.health + heal, attacker.maxHealth);
                 log.push(`${attacker.name} 吸取了 ${heal} 点生命值!`);
             } else if (attacker.skill.stunChance) {
-                if (Math.random() < attacker.skill.stunChance) {
+                if (this.random() < attacker.skill.stunChance) {
                     log.push(`${defender.name} 被眩晕了!`);
                     if (defender.name === this.player1.name) this.p1Stunned = true;
                     else if (defender.name === this.player2.name) this.p2Stunned = true;
@@ -226,14 +276,16 @@ export class BattleService {
             } else if (attacker.skill.poisonDamage) {
                 defender.poison = attacker.skill.turns;
                 defender.originalPoisonDuration = attacker.skill.turns;
+                defender.poisonSource = { name: attacker.name, role: attacker.role };
                 const poisonDamage = Math.floor(defender.maxHealth * attacker.skill.poisonDamage);
                 log.push(`${defender.name} 中毒了，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${poisonDamage} 点伤害!`);
             } else if (attacker.skill.burnDamage) {
                 defender.burn = attacker.skill.turns;
                 defender.originalBurnDuration = attacker.skill.turns;
+                defender.burnSource = { name: attacker.name, role: attacker.role };
                 log.push(`${defender.name} 燃烧了，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${attacker.skill.burnDamage} 点伤害!`);
             } else if (attacker.skill.freezeChance) {
-                if (Math.random() < attacker.skill.freezeChance) {
+                if (this.random() < attacker.skill.freezeChance) {
                     defender.freeze = true;
                     defender.freezeDuration = attacker.skill.turns;
                     defender.originalFreezeDuration = attacker.skill.turns;
@@ -275,7 +327,7 @@ export class BattleService {
         }
 
         if (defender.shield > 0) {
-            const shieldAbsorb = Math.min(damage, defender.shield);
+            shieldAbsorb = Math.min(damage, defender.shield);
             defender.shield -= shieldAbsorb;
             damage -= shieldAbsorb;
             log.push(`${defender.name} 的护盾吸收了 ${shieldAbsorb} 点伤害，剩余护盾: ${defender.shield}`);
@@ -290,6 +342,7 @@ export class BattleService {
         if (defender.reflection > 0) {
             const reflectDamage = Math.floor(damage * defender.reflection);
             attacker.health = Math.max(attacker.health - reflectDamage, 0);
+            reflectionDamage = reflectDamage;
             log.push(`${defender.name} 反射了 ${reflectDamage} 点伤害给 ${attacker.name}，${attacker.name} 剩余生命值: ${attacker.health}`);
 
             defender.reflectionDuration--;
@@ -299,9 +352,34 @@ export class BattleService {
             }
 
             this.updatePlayerUI();
+            this.emitEvent('onReflection', {
+                source: defender,
+                target: attacker,
+                damage: reflectDamage
+            });
         }
 
-        return { log };
+        const defenderHealthAfter = defender.health;
+        const attackerHealthAfter = attacker.health;
+        const damageDealt = Math.max(defenderHealthInitial - defenderHealthAfter, 0);
+        const reflectedDamageTaken = Math.max(attackerHealthInitial - attackerHealthAfter, 0);
+
+        this.emitEvent('onAttack', {
+            attacker,
+            defender,
+            damage: damageDealt,
+            isCritical,
+            skillTriggered,
+            shieldAbsorbed: shieldAbsorb,
+            reflectionDamage: reflectionDamage || reflectedDamageTaken
+        });
+
+        return {
+            log,
+            damage: damageDealt,
+            isCritical,
+            skillTriggered
+        };
     }
 
     handleStatusEffects() {
@@ -312,6 +390,15 @@ export class BattleService {
                 player.health = Math.max(player.health - poisonDamage, 0);
                 messages.push(`${player.name} 中毒了，受到 ${poisonDamage} 点伤害，剩余生命值: ${player.health}`);
                 player.poison--;
+                this.emitEvent('onStatusEffect', {
+                    target: player,
+                    type: 'poison',
+                    damage: poisonDamage,
+                    source: player.poisonSource || null
+                });
+                if (player.poison === 0) {
+                    player.poisonSource = null;
+                }
             }
 
             if (player.defenseBoostDuration > 0) {
