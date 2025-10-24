@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/dev-server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "analyze": "node scripts/balance-analysis.js"
   }
 }
