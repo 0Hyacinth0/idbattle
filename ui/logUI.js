@@ -120,6 +120,66 @@ function highlightLine(line, players) {
     return container;
 }
 
+function renderLogSnapshot(resultLog, lines, players, activeIndex = -1) {
+    if (!resultLog) {
+        return;
+    }
+
+    resultLog.innerHTML = '';
+    let currentRoundBody = null;
+
+    lines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        if (ROUND_HEADER_REGEX.test(trimmedLine)) {
+            const roundElement = document.createElement('div');
+            roundElement.classList.add('log-round');
+
+            const header = document.createElement('div');
+            header.classList.add('log-round__header');
+            if (index === activeIndex) {
+                header.classList.add('log-round__header--active');
+            }
+            header.appendChild(highlightLine(line, players));
+            roundElement.appendChild(header);
+
+            const body = document.createElement('div');
+            body.classList.add('log-round__body');
+            roundElement.appendChild(body);
+
+            resultLog.appendChild(roundElement);
+            currentRoundBody = body;
+        } else if (SEPARATOR_REGEX.test(trimmedLine)) {
+            const separator = document.createElement('div');
+            separator.classList.add('log-line', 'log-line--system');
+            if (index === activeIndex) {
+                separator.classList.add('log-line--active');
+            }
+            separator.textContent = line;
+            resultLog.appendChild(separator);
+            currentRoundBody = null;
+        } else if (currentRoundBody) {
+            const entry = document.createElement('div');
+            entry.classList.add('log-entry');
+            if (index === activeIndex) {
+                entry.classList.add('log-entry--active');
+            }
+            entry.appendChild(highlightLine(line, players));
+            currentRoundBody.appendChild(entry);
+        } else {
+            const lineElement = document.createElement('div');
+            lineElement.classList.add('log-line');
+            if (index === activeIndex) {
+                lineElement.classList.add('log-line--active');
+            }
+            lineElement.appendChild(highlightLine(line, players));
+            resultLog.appendChild(lineElement);
+        }
+    });
+
+    resultLog.scrollTop = resultLog.scrollHeight;
+    syncResultLogHeight(resultLog);
+}
+
 function ensureLogState(resultLog) {
     if (!resultLog._logState) {
         resultLog._logState = {
@@ -293,4 +353,38 @@ function resetBattleLog(initialMessage = '') {
     syncResultLogHeight(resultLog);
 }
 
-export { displayBattleLog, resetBattleLog };
+function renderBattleLogSnapshot(logPayload, visibleCount = null, player1 = null, player2 = null, options = {}) {
+    const resultLog = document.getElementById('result-log');
+    if (!resultLog) {
+        return;
+    }
+
+    const state = ensureLogState(resultLog);
+    const { text, structured, compressed } = normalizeLogPayload(logPayload);
+    state.structuredLog = structured;
+    state.compressedLog = compressed;
+
+    const players = [
+        { name: player1?.name, color: 'rgb(58, 109, 185)' },
+        { name: player2?.name, color: 'rgb(218, 64, 53)' }
+    ];
+    state.players = players;
+
+    const lines = text ? text.split('\n') : [];
+    const count = Number.isInteger(visibleCount) ? Math.min(Math.max(visibleCount, 0), lines.length) : lines.length;
+    const subset = lines.slice(0, count);
+    const highlightLatest = options.highlightLatest !== false;
+    const activeIndex = highlightLatest && count > 0 ? count - 1 : -1;
+
+    renderLogSnapshot(resultLog, subset, players, activeIndex);
+
+    state.renderedLines = count;
+    state.queue = [];
+    state.processing = false;
+    state.currentRoundBody = null;
+    state.timeoutId = null;
+    state.playerRefs = { player1, player2 };
+    state.updatePlayerInfo = typeof options.updatePlayerInfo === 'function' ? options.updatePlayerInfo : state.updatePlayerInfo;
+}
+
+export { displayBattleLog, resetBattleLog, renderBattleLogSnapshot };

@@ -106,6 +106,31 @@
                 <div class="battle-result">
                     <h2>战斗日志</h2>
                     <div id="result-log" role="log" aria-live="polite"></div>
+                    <div class="battle-replay" data-role="battle-replay" hidden>
+                        <div class="battle-replay__controls">
+                            <button type="button" class="battle-replay__play" data-action="replay-toggle" disabled>播放</button>
+                            <div class="battle-replay__speeds" role="group" aria-label="播放速度">
+                                <button type="button" class="battle-replay__speed battle-replay__speed--active" data-speed="1">1x</button>
+                                <button type="button" class="battle-replay__speed" data-speed="1.5">1.5x</button>
+                                <button type="button" class="battle-replay__speed" data-speed="2">2x</button>
+                                <button type="button" class="battle-replay__speed" data-speed="3">3x</button>
+                            </div>
+                            <label class="battle-replay__round-jump">
+                                <span class="battle-replay__round-label">回合跳转</span>
+                                <select data-role="replay-round" disabled></select>
+                            </label>
+                            <button type="button" class="battle-replay__summary" data-role="open-summary" disabled>战斗总结</button>
+                        </div>
+                        <div class="battle-replay__timeline">
+                            <input type="range" data-role="replay-slider" min="0" max="1" step="50" value="0" disabled aria-label="战斗回放时间轴">
+                            <div class="battle-replay__timeline-meta">
+                                <span data-role="replay-current">0:00</span>
+                                <span aria-hidden="true">/</span>
+                                <span data-role="replay-total">0:00</span>
+                                <span class="battle-replay__round-indicator" data-role="replay-round-label"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="player-info player2-info" aria-live="polite">
@@ -478,6 +503,40 @@
                 <p class="growth-storage__status" data-role="storage-status" aria-live="polite"></p>
             </section>
         </section>
+    </div>
+
+    <div class="battle-summary" data-role="battle-summary" hidden>
+        <div class="battle-summary__overlay" data-action="summary-close"></div>
+        <div class="battle-summary__panel" role="dialog" aria-modal="true" aria-labelledby="battle-summary-title" tabindex="-1">
+            <header class="battle-summary__header">
+                <h2 id="battle-summary-title">战斗总结</h2>
+                <div class="battle-summary__meta">
+                    <span data-summary="winner"></span>
+                    <span data-summary="rounds"></span>
+                </div>
+                <button type="button" class="battle-summary__close" data-action="summary-close" aria-label="关闭战斗总结">×</button>
+            </header>
+            <div class="battle-summary__body">
+                <section class="summary-section summary-section--verdict">
+                    <h3>战局分析</h3>
+                    <p class="summary-verdict" data-summary="verdict"></p>
+                    <p class="summary-text" data-summary="verdict-summary"></p>
+                    <ul class="summary-reasons" data-summary="reasons"></ul>
+                </section>
+                <section class="summary-section" data-summary-section="skills">
+                    <h3>技能触发统计</h3>
+                    <div class="summary-grid"></div>
+                </section>
+                <section class="summary-section" data-summary-section="damage-dealt">
+                    <h3>造成伤害</h3>
+                    <div class="summary-grid"></div>
+                </section>
+                <section class="summary-section" data-summary-section="damage-taken">
+                    <h3>承受伤害</h3>
+                    <div class="summary-grid"></div>
+                </section>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="main.js"></script>

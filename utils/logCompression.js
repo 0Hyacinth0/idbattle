@@ -41,7 +41,8 @@ export function compressStructuredLog(structuredLog) {
         entities: [],
         eventTypes: [],
         keyframeTypes: [],
-        stateAttributes: []
+        stateAttributes: [],
+        logTypes: []
     };
 
     const keyframes = (structuredLog.keyframes || []).map((keyframe) => {
@@ -79,17 +80,29 @@ export function compressStructuredLog(structuredLog) {
         ];
     });
 
+    const logEntries = (structuredLog.logEntries || []).map((entry) => {
+        const typeIndex = getIndex(dictionaries.logTypes, entry.type || 'entry');
+        return [
+            entry.timestamp ?? 0,
+            typeIndex,
+            entry.text ?? '',
+            entry.round ?? null
+        ];
+    });
+
     const compressed = {
         meta: structuredLog.meta ? JSON.parse(JSON.stringify(structuredLog.meta)) : null,
         dictionaries: {
             entities: dictionaries.entities,
             eventTypes: dictionaries.eventTypes,
             keyframeTypes: dictionaries.keyframeTypes,
-            stateAttributes: dictionaries.stateAttributes
+            stateAttributes: dictionaries.stateAttributes,
+            logTypes: dictionaries.logTypes
         },
         keyframes,
         events,
-        stateChanges
+        stateChanges,
+        logEntries
     };
 
     return compressed;
@@ -105,6 +118,7 @@ export function decompressStructuredLog(compressedLog) {
     const eventTypes = dictionaries.eventTypes || [];
     const keyframeTypes = dictionaries.keyframeTypes || [];
     const stateAttributes = dictionaries.stateAttributes || [];
+    const logTypes = dictionaries.logTypes || [];
 
     const reconstructEntity = (index) => {
         if (index === null || typeof index !== 'number') {
@@ -136,10 +150,18 @@ export function decompressStructuredLog(compressedLog) {
         context: context ?? null
     }));
 
+    const logEntries = (compressedLog.logEntries || []).map(([timestamp, typeIndex, text, round]) => ({
+        timestamp: timestamp ?? 0,
+        type: logTypes[typeIndex] ?? 'entry',
+        text: typeof text === 'string' ? text : '',
+        round: typeof round === 'number' ? round : null
+    }));
+
     return {
         meta: compressedLog.meta ? JSON.parse(JSON.stringify(compressedLog.meta)) : null,
         keyframes,
         events,
-        stateChanges
+        stateChanges,
+        logEntries
     };
 }
