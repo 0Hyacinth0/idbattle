@@ -176,9 +176,6 @@ export function initBattleSummaryPanel() {
     const overlay = root.querySelector('.battle-summary__overlay');
     const panel = root.querySelector('.battle-summary__panel');
     const closeButtons = root.querySelectorAll('[data-action="summary-close"]');
-    const verdictElement = root.querySelector('[data-summary="verdict"]');
-    const verdictSummary = root.querySelector('[data-summary="verdict-summary"]');
-    const reasonsList = root.querySelector('[data-summary="reasons"]');
     const winnerLabel = root.querySelector('[data-summary="winner"]');
     const roundsLabel = root.querySelector('[data-summary="rounds"]');
     const skillGrid = root.querySelector('[data-summary-section="skills"] .summary-grid');
@@ -198,23 +195,6 @@ export function initBattleSummaryPanel() {
     const render = (summary) => {
         if (!summary) {
             return;
-        }
-        const { analysis } = summary;
-        if (verdictElement && analysis?.verdict) {
-            verdictElement.textContent = `战局判定：${analysis.verdict}`;
-        }
-        if (verdictSummary && analysis?.summary) {
-            verdictSummary.textContent = analysis.summary;
-        }
-        if (reasonsList) {
-            clearElement(reasonsList);
-            if (Array.isArray(analysis?.reasons) && analysis.reasons.length) {
-                analysis.reasons.forEach((reason) => {
-                    const item = document.createElement('li');
-                    item.textContent = reason;
-                    reasonsList.appendChild(item);
-                });
-            }
         }
         if (winnerLabel) {
             if (summary.isDraw) {
