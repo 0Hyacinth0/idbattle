@@ -1037,6 +1037,7 @@ button:disabled {
     box-shadow: none;
     background: transparent;
     appearance: none;
+    --replay-progress: 0%;
 }
 
 .battle-replay__timeline input[type='range']:focus {
@@ -1047,8 +1048,14 @@ button:disabled {
 
 .battle-replay__timeline input[type='range']::-webkit-slider-runnable-track {
     height: 8px;
-    background: var(--border-light);
     border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--accent-red) 0%,
+        var(--accent-red) var(--replay-progress),
+        var(--border-light) var(--replay-progress),
+        var(--border-light) 100%
+    );
 }
 
 .battle-replay__timeline input[type='range']::-webkit-slider-thumb {
@@ -1059,7 +1066,6 @@ button:disabled {
     background: var(--accent-red);
     border: 3px solid var(--border-dark);
     margin-top: -4px;
-    box-shadow: -1200px 0 0 1200px var(--accent-red);
 }
 
 .battle-replay__timeline input[type='range']::-moz-range-track {
