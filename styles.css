@@ -959,6 +959,13 @@ button:disabled {
     gap: 14px;
 }
 
+.battle-replay__title {
+    font-size: var(--font-size-subheading);
+    letter-spacing: 0.16rem;
+    color: var(--accent-blue);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
 .battle-replay__controls {
     display: flex;
     flex-wrap: wrap;
@@ -1026,6 +1033,53 @@ button:disabled {
 
 .battle-replay__timeline input[type='range'] {
     width: 100%;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    appearance: none;
+}
+
+.battle-replay__timeline input[type='range']:focus {
+    outline: none;
+    border: none;
+    box-shadow: none;
+}
+
+.battle-replay__timeline input[type='range']::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--border-light);
+    border-radius: 999px;
+}
+
+.battle-replay__timeline input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-red);
+    border: 3px solid var(--border-dark);
+    margin-top: -4px;
+    box-shadow: -1200px 0 0 1200px var(--accent-red);
+}
+
+.battle-replay__timeline input[type='range']::-moz-range-track {
+    height: 8px;
+    background: var(--border-light);
+    border-radius: 999px;
+}
+
+.battle-replay__timeline input[type='range']::-moz-range-progress {
+    height: 8px;
+    background: var(--accent-red);
+    border-radius: 999px;
+}
+
+.battle-replay__timeline input[type='range']::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-red);
+    border: 3px solid var(--border-dark);
 }
 
 .battle-replay__timeline-meta {
