@@ -15,6 +15,10 @@ export class BattleService {
         this.currentRound = null;
     }
 
+    static LOG_ROUND_HEADER_REGEX = /^第\s*\d+\s*回合[:：]/;
+
+    static LOG_SEPARATOR_REGEX = /^=+$/;
+
     setPlayers(player1, player2, updateCallback) {
         this.player1 = player1;
         this.player2 = player2;
@@ -235,7 +239,32 @@ export class BattleService {
             return;
         }
         log.push(...filteredLines);
+        this.recordLogEntries(filteredLines);
         this.notifyLogUpdate(logCallback, { finalize: options.finalize });
+    }
+
+    recordLogEntries(lines) {
+        if (!this.structuredLog || !Array.isArray(lines) || !lines.length) {
+            return;
+        }
+
+        const timestamp = this.getRelativeTimestamp();
+        lines.forEach((line) => {
+            const trimmed = typeof line === 'string' ? line.trim() : '';
+            let type = 'entry';
+            if (BattleService.LOG_ROUND_HEADER_REGEX.test(trimmed)) {
+                type = 'round_header';
+            } else if (BattleService.LOG_SEPARATOR_REGEX.test(trimmed)) {
+                type = 'separator';
+            }
+
+            this.structuredLog.logEntries.push({
+                timestamp,
+                text: line,
+                round: this.currentRound,
+                type
+            });
+        });
     }
 
     playersAlive() {
@@ -862,7 +891,8 @@ export class BattleService {
             },
             keyframes: [],
             events: [],
-            stateChanges: []
+            stateChanges: [],
+            logEntries: []
         };
         this.compressedLog = null;
     }
