@@ -101,9 +101,24 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
+function normalizeIdSpacing(line) {
+    if (typeof line !== 'string') {
+        return line;
+    }
+    let normalized = line.replace(/\bID\b\s*[:：]\s*/gi, 'ID：');
+    normalized = normalized.replace(/\bID\b\s*(\d+)/gi, 'ID：$1');
+    normalized = normalized.replace(/([（(])\s*(ID：)/g, '$1$2');
+    normalized = normalized.replace(/(?<![\s（(])ID：/g, ' ID：');
+    normalized = normalized.replace(/ID：\s+/g, 'ID：');
+    normalized = normalized.replace(/\s+(ID：)/g, ' $1');
+    normalized = normalized.replace(/^\s+ID：/g, 'ID：');
+    return normalized;
+}
+
 function highlightLine(line, players) {
     const container = document.createElement('span');
-    container.textContent = line;
+    const normalizedLine = normalizeIdSpacing(line);
+    container.textContent = normalizedLine;
     let processed = container.innerHTML;
 
     players.forEach(({ name, color }) => {
@@ -154,7 +169,7 @@ function renderLogSnapshot(resultLog, lines, players, activeIndex = -1) {
             if (index === activeIndex) {
                 separator.classList.add('log-line--active');
             }
-            separator.textContent = line;
+            separator.textContent = normalizeIdSpacing(line);
             resultLog.appendChild(separator);
             currentRoundBody = null;
         } else if (currentRoundBody) {
@@ -218,7 +233,7 @@ function createRoundContainer(resultLog, line, players) {
 function appendSystemLine(resultLog, line, className = 'log-line') {
     const lineElement = document.createElement('div');
     lineElement.classList.add(...className.split(' '));
-    lineElement.textContent = line;
+    lineElement.textContent = normalizeIdSpacing(line);
     resultLog.appendChild(lineElement);
 }
 

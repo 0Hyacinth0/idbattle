@@ -35,7 +35,7 @@ function createMetricItem(label, value) {
     return item;
 }
 
-function formatDamageDetail(detail, direction) {
+function formatDamageDetail(detail) {
     if (!detail) {
         return '';
     }
@@ -44,13 +44,8 @@ function formatDamageDetail(detail, direction) {
         parts.push(`回合 ${detail.round}`);
     }
     const valueText = formatNumber(detail.value || 0);
-    if (direction === 'dealt') {
-        const target = detail.target || '对手';
-        parts.push(`对 ${target} ${valueText}`);
-    } else {
-        const source = detail.source || '未知';
-        parts.push(`来自 ${source} ${valueText}`);
-    }
+    const target = detail.target || '对手';
+    parts.push(`对 ${target} ${valueText}`);
     if (detail.type) {
         parts.push(detail.type);
     }
@@ -61,13 +56,11 @@ function formatDamageDetail(detail, direction) {
     if (detail.viaSkill) {
         flags.push('技能');
     }
-    if (direction === 'dealt') {
-        if (detail.reflectionDamage) {
-            flags.push(`反弹 ${formatNumber(detail.reflectionDamage)}`);
-        }
-        if (detail.shieldAbsorbed) {
-            flags.push(`护盾抵消 ${formatNumber(detail.shieldAbsorbed)}`);
-        }
+    if (detail.reflectionDamage) {
+        flags.push(`反弹 ${formatNumber(detail.reflectionDamage)}`);
+    }
+    if (detail.shieldAbsorbed) {
+        flags.push(`护盾抵消 ${formatNumber(detail.shieldAbsorbed)}`);
     }
     if (flags.length) {
         parts.push(`(${flags.join('，')})`);
@@ -116,7 +109,7 @@ function renderSkillCard(summary) {
     return card;
 }
 
-function renderDamageCard(summary, direction) {
+function renderDamageCard(summary) {
     const card = document.createElement('article');
     card.className = 'summary-card';
 
@@ -127,14 +120,13 @@ function renderDamageCard(summary, direction) {
     const metrics = document.createElement('ul');
     metrics.className = 'summary-metrics';
 
-    if (direction === 'dealt') {
-        metrics.appendChild(createMetricItem('总伤害', formatNumber(summary.damageDealt)));
-        metrics.appendChild(createMetricItem('状态伤害', formatNumber(summary.statusDamageDealt)));
-        metrics.appendChild(createMetricItem('反弹伤害', formatNumber(summary.reflectionDamageDealt)));
-    } else {
-        metrics.appendChild(createMetricItem('承伤总量', formatNumber(summary.damageTaken)));
-        metrics.appendChild(createMetricItem('状态承伤', formatNumber(summary.statusDamageTaken)));
-        metrics.appendChild(createMetricItem('反弹承伤', formatNumber(summary.reflectionDamageTaken)));
+    const totalDamage = summary.damageDealt;
+    const attacks = Number.isFinite(summary.attackCount) && summary.attackCount > 0 ? summary.attackCount : null;
+    metrics.appendChild(createMetricItem('总伤害', formatNumber(totalDamage)));
+    metrics.appendChild(createMetricItem('状态伤害', formatNumber(summary.statusDamageDealt)));
+    metrics.appendChild(createMetricItem('反弹伤害', formatNumber(summary.reflectionDamageDealt)));
+    if (attacks) {
+        metrics.appendChild(createMetricItem('平均每次攻击', `${formatNumber(totalDamage / attacks)} 点`));
     }
 
     card.appendChild(metrics);
@@ -142,14 +134,14 @@ function renderDamageCard(summary, direction) {
     const detailList = document.createElement('ul');
     detailList.className = 'summary-list summary-list--details';
 
-    const sourceDetails = direction === 'dealt' ? summary.damageDealtDetails : summary.damageTakenDetails;
+    const sourceDetails = summary.damageDealtDetails;
     if (Array.isArray(sourceDetails) && sourceDetails.length) {
         const topDetails = [...sourceDetails]
             .sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
             .slice(0, DETAIL_LIMIT);
         topDetails.forEach((detail) => {
             const item = document.createElement('li');
-            item.textContent = formatDamageDetail(detail, direction);
+            item.textContent = formatDamageDetail(detail);
             detailList.appendChild(item);
         });
     } else {
@@ -180,7 +172,6 @@ export function initBattleSummaryPanel() {
     const roundsLabel = root.querySelector('[data-summary="rounds"]');
     const skillGrid = root.querySelector('[data-summary-section="skills"] .summary-grid');
     const damageDealtGrid = root.querySelector('[data-summary-section="damage-dealt"] .summary-grid');
-    const damageTakenGrid = root.querySelector('[data-summary-section="damage-taken"] .summary-grid');
 
     let lastActiveElement = null;
 
@@ -217,14 +208,8 @@ export function initBattleSummaryPanel() {
 
         if (damageDealtGrid) {
             clearElement(damageDealtGrid);
-            damageDealtGrid.appendChild(renderDamageCard(summary.players.player1, 'dealt'));
-            damageDealtGrid.appendChild(renderDamageCard(summary.players.player2, 'dealt'));
-        }
-
-        if (damageTakenGrid) {
-            clearElement(damageTakenGrid);
-            damageTakenGrid.appendChild(renderDamageCard(summary.players.player1, 'taken'));
-            damageTakenGrid.appendChild(renderDamageCard(summary.players.player2, 'taken'));
+            damageDealtGrid.appendChild(renderDamageCard(summary.players.player1));
+            damageDealtGrid.appendChild(renderDamageCard(summary.players.player2));
         }
     };
 

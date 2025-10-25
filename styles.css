@@ -1154,16 +1154,20 @@ button:disabled {
 
 .battle-summary__header {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
     justify-content: space-between;
 }
 
 .battle-summary__meta {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 6px 12px;
     font-size: var(--font-size-small);
     color: var(--text-muted);
+    margin-left: auto;
+    text-align: right;
 }
 
 .battle-summary__close {
@@ -1191,10 +1195,10 @@ button:disabled {
 .summary-section {
     background: var(--bg-panel-light);
     border: 3px solid var(--border-dark);
-    padding: 18px 20px;
+    padding: 20px 22px;
     box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
     display: grid;
-    gap: 14px;
+    gap: 18px;
 }
 
 .summary-section h3 {
@@ -1203,22 +1207,22 @@ button:disabled {
 
 .summary-grid {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .summary-card {
     background: #201a31;
     border: 3px solid var(--border-dark);
-    padding: 16px 18px;
+    padding: 18px 20px;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
     display: grid;
-    gap: 12px;
+    gap: 16px;
 }
 
 .summary-card h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--accent-blue);
 }
 
@@ -1227,17 +1231,26 @@ button:disabled {
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 6px;
+    gap: 8px;
 }
 
 .summary-metrics__item {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 12px;
     font-size: var(--font-size-small);
 }
 
 .summary-metrics__label {
     color: var(--text-muted);
+    letter-spacing: 0.04rem;
+}
+
+.summary-metrics__value {
+    justify-self: end;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .summary-list {
@@ -1247,6 +1260,11 @@ button:disabled {
     display: grid;
     gap: 6px;
     font-size: var(--font-size-small);
+}
+
+.summary-list--details {
+    gap: 8px;
+    line-height: 1.55;
 }
 
 .summary-list__empty {

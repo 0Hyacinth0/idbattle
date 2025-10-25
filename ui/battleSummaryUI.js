@@ -107,7 +107,6 @@ export function initBattleSummaryUI() {
                 message: formatResultMessage(summaryCache),
                 hidden: false
             });
-            summaryPanel.open(summaryCache);
         }
     };
 }
