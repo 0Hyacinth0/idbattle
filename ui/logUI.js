@@ -130,7 +130,9 @@ function ensureLogState(resultLog) {
             players: [],
             currentRoundBody: null,
             playerRefs: null,
-            updatePlayerInfo: null
+            updatePlayerInfo: null,
+            structuredLog: null,
+            compressedLog: null
         };
     }
     return resultLog._logState;
@@ -204,7 +206,21 @@ function processLogQueue(resultLog) {
     state.timeoutId = window.setTimeout(() => processLogQueue(resultLog), LOG_RENDER_INTERVAL);
 }
 
-function displayBattleLog(log, updatePlayerInfo, player1, player2) {
+function normalizeLogPayload(payload) {
+    if (typeof payload === 'string') {
+        return { text: payload, structured: null, compressed: null };
+    }
+    if (!payload || typeof payload !== 'object') {
+        return { text: '', structured: null, compressed: null };
+    }
+    return {
+        text: typeof payload.text === 'string' ? payload.text : '',
+        structured: payload.structured ?? null,
+        compressed: payload.compressed ?? null
+    };
+}
+
+function displayBattleLog(logPayload, updatePlayerInfo, player1, player2) {
     const resultLog = document.getElementById('result-log');
     if (!resultLog) {
         console.error('战斗日志DOM元素不存在');
@@ -214,6 +230,9 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
     syncResultLogHeight(resultLog);
 
     const state = ensureLogState(resultLog);
+    const { text, structured, compressed } = normalizeLogPayload(logPayload);
+    state.structuredLog = structured;
+    state.compressedLog = compressed;
     state.players = [
         { name: player1?.name, color: 'rgb(58, 109, 185)' },
         { name: player2?.name, color: 'rgb(218, 64, 53)' }
@@ -221,7 +240,7 @@ function displayBattleLog(log, updatePlayerInfo, player1, player2) {
     state.playerRefs = { player1, player2 };
     state.updatePlayerInfo = updatePlayerInfo;
 
-    const logLines = log.split('\n');
+    const logLines = text.split('\n');
     const newLines = logLines.slice(state.renderedLines);
     if (!newLines.length) {
         if (typeof updatePlayerInfo === 'function') {
@@ -259,7 +278,9 @@ function resetBattleLog(initialMessage = '') {
         players: [],
         currentRoundBody: null,
         playerRefs: null,
-        updatePlayerInfo: null
+        updatePlayerInfo: null,
+        structuredLog: null,
+        compressedLog: null
     };
 
     if (initialMessage) {
