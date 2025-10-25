@@ -73,11 +73,25 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         summaryButton.disabled = true;
     };
 
+    const updateSliderVisualProgress = () => {
+        if (!slider) {
+            return;
+        }
+        const value = Number(slider.value);
+        const maxValue = Number(slider.max);
+        let progress = 0;
+        if (Number.isFinite(value) && Number.isFinite(maxValue) && maxValue > 0) {
+            progress = Math.min(Math.max(value / maxValue, 0), 1);
+        }
+        slider.style.setProperty('--replay-progress', `${progress * 100}%`);
+    };
+
     const resetSlider = () => {
         slider.value = '0';
         slider.min = '0';
         slider.max = '1';
         slider.step = '50';
+        updateSliderVisualProgress();
     };
 
     const resetTimeLabels = () => {
@@ -124,6 +138,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         const step = Math.max(50, Math.round(roundedDuration / 200));
         slider.step = String(step);
         slider.disabled = false;
+        updateSliderVisualProgress();
     };
 
     const populateRoundOptions = (rounds) => {
@@ -220,6 +235,8 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         }
         currentTimeLabel.textContent = formatTime(payload.time);
         totalTimeLabel.textContent = formatTime(payload.duration);
+
+        updateSliderVisualProgress();
 
         const activeRound = resolveDisplayedRound(payload);
         if (activeRound > 0) {
@@ -336,6 +353,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
                 return;
             }
             controller.seekTo(value);
+            updateSliderVisualProgress();
         });
     }
 
