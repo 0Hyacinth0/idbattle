@@ -106,31 +106,24 @@
                 <div class="battle-result">
                     <h2>战斗日志</h2>
                     <div id="result-log" role="log" aria-live="polite"></div>
-                    <div class="battle-replay" data-role="battle-replay" hidden>
-                        <h3 class="battle-replay__title">战斗回放</h3>
-                        <div class="battle-replay__controls">
-                            <button type="button" class="battle-replay__play" data-action="replay-toggle" disabled>播放</button>
-                            <div class="battle-replay__speeds" role="group" aria-label="播放速度">
-                                <button type="button" class="battle-replay__speed battle-replay__speed--active" data-speed="1">1x</button>
-                                <button type="button" class="battle-replay__speed" data-speed="1.5">1.5x</button>
-                                <button type="button" class="battle-replay__speed" data-speed="2">2x</button>
-                                <button type="button" class="battle-replay__speed" data-speed="3">3x</button>
-                            </div>
-                            <label class="battle-replay__round-jump">
-                                <span class="battle-replay__round-label">回合跳转</span>
-                                <select data-role="replay-round" disabled></select>
-                            </label>
-                            <button type="button" class="battle-replay__summary" data-role="open-summary" disabled>战斗总结</button>
-                        </div>
-                        <div class="battle-replay__timeline">
-                            <input type="range" data-role="replay-slider" min="0" max="1" step="50" value="0" disabled aria-label="战斗回放时间轴">
-                            <div class="battle-replay__timeline-meta">
-                                <span data-role="replay-current">0:00</span>
-                                <span aria-hidden="true">/</span>
-                                <span data-role="replay-total">0:00</span>
-                                <span class="battle-replay__round-indicator" data-role="replay-round-label"></span>
-                            </div>
-                        </div>
+                    <div class="battle-summary-trigger" data-role="battle-summary-trigger" hidden>
+                        <p
+                            class="battle-summary-trigger__status"
+                            data-role="summary-status"
+                            id="battle-summary-status"
+                            aria-live="polite"
+                        >
+                            战斗总结将在战斗结束后生成
+                        </p>
+                        <button
+                            type="button"
+                            class="battle-summary-trigger__button"
+                            data-action="open-summary"
+                            aria-describedby="battle-summary-status"
+                            disabled
+                        >
+                            查看战斗总结
+                        </button>
                     </div>
                 </div>
 

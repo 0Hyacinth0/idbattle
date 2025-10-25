@@ -6,7 +6,7 @@ import { displayBattleLog, resetBattleLog } from './ui/logUI.js';
 import { EquipmentType, equipmentList, setEffects, equipmentByType } from './models/equipment.js';
 import { initPlayerGrowthUI } from './ui/playerGrowthUI.js';
 import { getPlayerConfig } from './utils/storage.js';
-import { initBattleReplayUI } from './ui/battleReplayUI.js';
+import { initBattleSummaryUI } from './ui/battleSummaryUI.js';
 
 // 将一些常量挂载到window对象，以便在其他模块中访问
 window.equipmentList = equipmentList;
@@ -28,14 +28,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initPlayerPanels();
     initPlayerGrowthUI();
 
-    const battleReplayUI = initBattleReplayUI({ updatePlayerInfo });
+    const battleSummaryUI = initBattleSummaryUI();
 
     battleService.setEventHandlers({
         onBattleStart: () => {
-            battleReplayUI.handleBattleStart();
+            battleSummaryUI.handleBattleStart();
         },
         onBattleEnd: (payload) => {
-            battleReplayUI.handleBattleEnd(payload);
+            battleSummaryUI.handleBattleEnd(payload);
         }
     });
 
