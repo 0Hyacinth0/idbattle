@@ -56,6 +56,27 @@ export class BattleService {
         return Math.random();
     }
 
+    getSkillName(skillOrName) {
+        if (!skillOrName) {
+            return '';
+        }
+        if (typeof skillOrName === 'string') {
+            return skillOrName;
+        }
+        if (typeof skillOrName === 'object' && skillOrName !== null) {
+            return skillOrName.name || '';
+        }
+        return '';
+    }
+
+    formatSkillReference(skillOrName, fallback = '技能效果') {
+        const name = this.getSkillName(skillOrName)?.trim();
+        if (!name) {
+            return fallback;
+        }
+        return `技能「${name}」`;
+    }
+
     updatePlayerUI() {
         if (this.updatePlayerInfoCallback) {
             this.updatePlayerInfoCallback(this.player1, true);
@@ -177,7 +198,8 @@ export class BattleService {
         const stunnedFlag = attacker === this.player1 ? 'p1Stunned' : 'p2Stunned';
 
         if (this[stunnedFlag]) {
-            messages.push(`${attacker.name}被眩晕了，无法行动!`);
+            const stunSkillRef = this.formatSkillReference(attacker.stunnedSkillName, '技能效果');
+            messages.push(`${attacker.name}受到了${stunSkillRef}的眩晕影响，无法行动!`);
             this.setStunState(attacker, false, {
                 round: this.currentRound,
                 reason: 'stun_consumed'
@@ -193,7 +215,8 @@ export class BattleService {
         }
 
         if (attacker.freeze) {
-            messages.push(`${attacker.name}被冰冻了，无法行动!`);
+            const freezeSkillRef = this.formatSkillReference(attacker.freezeSourceSkillName, '技能效果');
+            messages.push(`${attacker.name}受到${freezeSkillRef}影响被冰冻，无法行动!`);
             const wasFrozen = Boolean(attacker.freeze);
             attacker.freeze = false;
             if (wasFrozen) {
@@ -257,7 +280,8 @@ export class BattleService {
         let reflectionDamage = 0;
 
         if (attacker.freeze) {
-            log.push(`${attacker.name}被冰冻了，无法攻击且无法触发技能!`);
+            const freezeSkillRef = this.formatSkillReference(attacker.freezeSourceSkillName, '技能效果');
+            log.push(`${attacker.name}受到${freezeSkillRef}影响被冰冻，无法攻击且无法触发技能!`);
             const wasFrozen = Boolean(attacker.freeze);
             attacker.freeze = false;
             if (wasFrozen) {
@@ -281,7 +305,8 @@ export class BattleService {
         if (defender.armorPenetration) {
             const effectiveDefense = defender.defense * (1 - defender.armorPenetration);
             defenseEffectiveness = effectiveDefense / (effectiveDefense + 50);
-            log.push(`${defender.name} 破防效果生效! 防御效果降低了 ${Math.floor(defender.armorPenetration * 100)}%!`);
+            const armorPenSkillRef = this.formatSkillReference(defender.armorPenetrationSourceSkillName, '技能效果');
+            log.push(`${armorPenSkillRef}在${defender.name}身上生效，防御效果降低了 ${Math.floor(defender.armorPenetration * 100)}%!`);
             this.recordEvent('status_effect', {
                 actor: this.createEntityReference(defender),
                 parameters: {
@@ -329,7 +354,8 @@ export class BattleService {
             const skillChance = attacker.skill.chance || 0.1;
             skillTriggered = this.random() < skillChance;
         } else {
-            log.push(`${attacker.name} 被嘲讽了，无法触发技能!`);
+            const tauntSkillRef = this.formatSkillReference(attacker.tauntSourceSkillName, '技能效果');
+            log.push(`${attacker.name}受到${tauntSkillRef}影响被嘲讽，无法触发技能!`);
             this.recordEvent('taunt_block', {
                 actor: this.createEntityReference(attacker),
                 target: this.createEntityReference(defender),
@@ -340,7 +366,7 @@ export class BattleService {
         }
 
         if (skillTriggered) {
-            log.push(`${attacker.name} 触发了技能: ${attacker.skill.name}!`);
+            log.push(`${attacker.name} 触发了${this.formatSkillReference(attacker.skill)}!`);
             this.recordEvent('skill_triggered', {
                 actor: this.createEntityReference(attacker),
                 target: this.createEntityReference(defender),
@@ -352,7 +378,7 @@ export class BattleService {
 
             if (attacker.skill.damageMultiplier) {
                 damage *= attacker.skill.damageMultiplier;
-                log.push(`造成了 ${attacker.skill.damageMultiplier} 倍伤害!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}使伤害提高至 ${attacker.skill.damageMultiplier} 倍!`);
                 this.recordEvent('skill_effect', {
                     actor: this.createEntityReference(attacker),
                     target: this.createEntityReference(defender),
@@ -370,7 +396,7 @@ export class BattleService {
                 const extraDamage = attacker.attack - defender.defense / 2;
                 damage = Math.max(extraDamage, 1);
                 if (isCritical) damage = Math.floor(damage * 1.5);
-                log.push(`${attacker.name} 连击!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}触发，${attacker.name}发动连击!`);
                 this.recordStateChange(defender, 'health', beforeFirstStrike, Math.max(defender.health, 0), {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -390,7 +416,9 @@ export class BattleService {
                 attacker.defense += attacker.skill.defenseBoost;
                 attacker.defenseBoostDuration = attacker.skill.turns;
                 attacker.originalDefenseBoostDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 防御力提高了 ${attacker.skill.defenseBoost} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
+                attacker.defenseBoostSkillName = this.getSkillName(attacker.skill);
+                attacker.defenseBoostValue = attacker.skill.defenseBoost;
+                log.push(`${this.formatSkillReference(attacker.skill)}为${attacker.name}提供防御力加成，提高 ${attacker.skill.defenseBoost} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'defense', previousDefense, attacker.defense, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -400,7 +428,7 @@ export class BattleService {
                 const heal = Math.floor(damage * attacker.skill.lifeSteal);
                 const previousHealth = attacker.health;
                 attacker.health = Math.min(attacker.health + heal, attacker.maxHealth);
-                log.push(`${attacker.name} 吸取了 ${heal} 点生命值!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}使${attacker.name}吸取了 ${heal} 点生命值!`);
                 this.recordStateChange(attacker, 'health', previousHealth, attacker.health, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -409,7 +437,8 @@ export class BattleService {
                 });
             } else if (attacker.skill.stunChance) {
                 if (this.random() < attacker.skill.stunChance) {
-                    log.push(`${defender.name} 被眩晕了!`);
+                    const stunSkillRef = this.formatSkillReference(attacker.skill);
+                    log.push(`${defender.name} 被${stunSkillRef}眩晕!`);
                     this.setStunState(defender, true, {
                         round: this.currentRound,
                         source: this.createEntityReference(attacker),
@@ -425,7 +454,8 @@ export class BattleService {
                         }
                     });
                 } else {
-                    log.push(`${defender.name} 成功抵抗了眩晕效果!`);
+                    const stunSkillRef = this.formatSkillReference(attacker.skill);
+                    log.push(`${defender.name} 成功抵抗了${stunSkillRef}的眩晕效果!`);
                 }
             } else if (attacker.skill.attackBoost) {
                 const previousAttack = attacker.attack;
@@ -434,7 +464,10 @@ export class BattleService {
                 attacker.defense -= attacker.skill.defensePenalty;
                 attacker.attackBoostDuration = attacker.skill.turns;
                 attacker.originalAttackBoostDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 进入狂暴状态! 攻击提高 ${attacker.skill.attackBoost} 点，防御降低 ${attacker.skill.defensePenalty} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
+                attacker.attackBoostSkillName = this.getSkillName(attacker.skill);
+                attacker.attackBoostValue = attacker.skill.attackBoost;
+                attacker.attackBoostDefensePenalty = attacker.skill.defensePenalty;
+                log.push(`${this.formatSkillReference(attacker.skill)}使${attacker.name}进入狂暴状态! 攻击提高 ${attacker.skill.attackBoost} 点，防御降低 ${attacker.skill.defensePenalty} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'attack', previousAttack, attacker.attack, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -450,7 +483,7 @@ export class BattleService {
                 const healAmount = Math.floor(missingHealth * attacker.skill.healAmount);
                 const previousHealth = attacker.health;
                 attacker.health = Math.min(attacker.health + healAmount, attacker.maxHealth);
-                log.push(`${attacker.name} 恢复了 ${healAmount} 点生命值!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}使${attacker.name}恢复了 ${healAmount} 点生命值!`);
                 this.recordStateChange(attacker, 'health', previousHealth, attacker.health, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -464,7 +497,8 @@ export class BattleService {
                 attacker.critChanceBoostValue = attacker.skill.critChanceBoost;
                 attacker.critChanceBoostDuration = attacker.skill.turns;
                 attacker.originalCritChanceBoostDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 聚气效果触发! 会心几率提高了 ${Math.floor(attacker.skill.critChanceBoost * 100)}%，持续 ${attacker.skill.turns || 0} 回合!`);
+                attacker.critChanceBoostSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}提升了${attacker.name}的会心几率 ${Math.floor(attacker.skill.critChanceBoost * 100)}%，持续 ${attacker.skill.turns || 0} 回合!`);
                 this.recordStateChange(attacker, 'critChance', previousCrit, attacker.critChance, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -475,7 +509,8 @@ export class BattleService {
                 defender.armorPenetration = attacker.skill.armorPenetration;
                 defender.armorPenetrationDuration = attacker.skill.turns;
                 defender.originalArmorPenetrationDuration = attacker.skill.turns;
-                log.push(`${defender.name} 破防效果触发! 防御力被无视 ${Math.floor(attacker.skill.armorPenetration * 100)}%，持续 ${attacker.skill.turns || 0} 回合!`);
+                defender.armorPenetrationSourceSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}令${defender.name}的防御被无视 ${Math.floor(attacker.skill.armorPenetration * 100)}%，持续 ${attacker.skill.turns || 0} 回合!`);
                 this.recordStateChange(defender, 'armorPenetration', previousArmorPenetration, defender.armorPenetration, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -485,9 +520,13 @@ export class BattleService {
                 const previousPoison = defender.poison || 0;
                 defender.poison = attacker.skill.turns;
                 defender.originalPoisonDuration = attacker.skill.turns;
-                defender.poisonSource = { name: attacker.name, role: attacker.role };
+                defender.poisonSource = {
+                    name: attacker.name,
+                    role: attacker.role,
+                    skillName: this.getSkillName(attacker.skill)
+                };
                 const poisonDamage = Math.floor(defender.maxHealth * attacker.skill.poisonDamage);
-                log.push(`${defender.name} 中毒了，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${poisonDamage} 点伤害!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}让${defender.name}中毒，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${poisonDamage} 点伤害!`);
                 this.recordStateChange(defender, 'poison', previousPoison, defender.poison, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -497,9 +536,13 @@ export class BattleService {
                 const previousBurn = defender.burn || 0;
                 defender.burn = attacker.skill.turns;
                 defender.originalBurnDuration = attacker.skill.turns;
-                defender.burnSource = { name: attacker.name, role: attacker.role };
+                defender.burnSource = {
+                    name: attacker.name,
+                    role: attacker.role,
+                    skillName: this.getSkillName(attacker.skill)
+                };
                 defender.burnDamageValue = attacker.skill.burnDamage;
-                log.push(`${defender.name} 燃烧了，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${attacker.skill.burnDamage} 点伤害!`);
+                log.push(`${this.formatSkillReference(attacker.skill)}让${defender.name}陷入燃烧状态，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${attacker.skill.burnDamage} 点伤害!`);
                 this.recordStateChange(defender, 'burn', previousBurn, defender.burn, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -511,21 +554,23 @@ export class BattleService {
                     defender.freeze = true;
                     defender.freezeDuration = attacker.skill.turns;
                     defender.originalFreezeDuration = attacker.skill.turns;
-                    log.push(`${defender.name} 被冰冻了，${attacker.skill.turns || 0} 次攻击无法施展且无法触发技能!`);
+                    defender.freezeSourceSkillName = this.getSkillName(attacker.skill);
+                    log.push(`${this.formatSkillReference(attacker.skill)}令${defender.name}被冰冻，${attacker.skill.turns || 0} 次攻击无法施展且无法触发技能!`);
                     this.recordStateChange(defender, 'freeze', previousFreeze, defender.freeze, {
                         round: this.currentRound,
                         source: this.createEntityReference(attacker),
                         skill: attacker.skill.name
                     });
                 } else {
-                    log.push(`${defender.name} 成功抵抗了冰冻效果!`);
+                    log.push(`${defender.name} 成功抵抗了${this.formatSkillReference(attacker.skill)}的冰冻效果!`);
                 }
             } else if (attacker.skill.taunt) {
                 const previousTaunt = Boolean(defender.taunted);
                 defender.taunted = true;
                 defender.tauntDuration = attacker.skill.turns;
                 defender.originalTauntDuration = attacker.skill.turns;
-                log.push(`${defender.name} 被嘲讽了，${attacker.skill.turns || 0} 次攻击只能攻击${attacker.name}且无法触发技能!`);
+                defender.tauntSourceSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}嘲讽了${defender.name}，${attacker.skill.turns || 0} 次攻击只能攻击${attacker.name}且无法触发技能!`);
                 this.recordStateChange(defender, 'taunted', previousTaunt, defender.taunted, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -536,7 +581,8 @@ export class BattleService {
                 attacker.reflection = attacker.skill.damageReflection;
                 attacker.reflectionDuration = attacker.skill.turns;
                 attacker.originalReflectionDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 获得了伤害反射效果，将反射 ${Math.floor(attacker.skill.damageReflection * 100)}% 的伤害，持续 ${attacker.skill.turns || 0} 次攻击!`);
+                attacker.reflectionSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}为${attacker.name}赋予伤害反射效果，将反射 ${Math.floor(attacker.skill.damageReflection * 100)}% 的伤害，持续 ${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'reflection', previousReflection, attacker.reflection, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -546,7 +592,8 @@ export class BattleService {
                 const shieldAmount = Math.floor(attacker.maxHealth * attacker.skill.shieldAmount);
                 const previousShield = attacker.shield || 0;
                 attacker.shield += shieldAmount;
-                log.push(`${attacker.name} 获得了 ${shieldAmount} 点护盾!`);
+                attacker.shieldSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}为${attacker.name}提供了${shieldAmount} 点护盾!`);
                 this.recordStateChange(attacker, 'shield', previousShield, attacker.shield, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -557,7 +604,8 @@ export class BattleService {
                 attacker.parryChance = (attacker.parryChance || 0) + attacker.skill.parryBoost;
                 attacker.parryChanceDuration = attacker.skill.turns;
                 attacker.originalParryChanceDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 获得了招架提升效果，招架率增加 ${Math.floor(attacker.skill.parryBoost * 100)}%，持续${attacker.skill.turns || 0} 次攻击!`);
+                attacker.parryBoostSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}提升了${attacker.name}的招架率 ${Math.floor(attacker.skill.parryBoost * 100)}%，持续${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'parryChance', previousParry, attacker.parryChance, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -568,7 +616,9 @@ export class BattleService {
                 attacker.speed += attacker.skill.speedBoost;
                 attacker.speedBoostDuration = attacker.skill.turns;
                 attacker.originalSpeedBoostDuration = attacker.skill.turns;
-                log.push(`${attacker.name} 获得了速度提升效果，速度增加 ${attacker.skill.speedBoost} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
+                attacker.speedBoostSkillName = this.getSkillName(attacker.skill);
+                attacker.speedBoostValue = attacker.skill.speedBoost;
+                log.push(`${this.formatSkillReference(attacker.skill)}提升了${attacker.name}的速度 ${attacker.skill.speedBoost} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'speed', previousSpeed, attacker.speed, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -580,7 +630,8 @@ export class BattleService {
                 defender.attackReductionDuration = attacker.skill.turns;
                 defender.originalAttackReductionDuration = attacker.skill.turns;
                 defender.originalAttackReductionValue = attacker.skill.attackReduction;
-                log.push(`${defender.name} 受到了化劲效果影响，攻击力降低 ${attacker.skill.attackReduction} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
+                defender.attackReductionSkillName = this.getSkillName(attacker.skill);
+                log.push(`${this.formatSkillReference(attacker.skill)}削弱了${defender.name}的攻击力 ${attacker.skill.attackReduction} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(defender, 'attack', previousAttack, defender.attack, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
@@ -594,7 +645,8 @@ export class BattleService {
             const previousShield = defender.shield;
             defender.shield -= shieldAbsorb;
             damage -= shieldAbsorb;
-            log.push(`${defender.name} 的护盾吸收了 ${shieldAbsorb} 点伤害，剩余护盾: ${defender.shield}`);
+            const shieldSkillRef = this.formatSkillReference(defender.shieldSkillName, '护盾效果');
+            log.push(`来自${shieldSkillRef}的护盾为${defender.name}吸收了 ${shieldAbsorb} 点伤害，剩余护盾: ${defender.shield}`);
             this.recordStateChange(defender, 'shield', previousShield, defender.shield, {
                 round: this.currentRound,
                 source: this.createEntityReference(attacker),
@@ -618,7 +670,8 @@ export class BattleService {
             const previousHealth = attacker.health;
             attacker.health = Math.max(attacker.health - reflectDamage, 0);
             reflectionDamage = reflectDamage;
-            log.push(`${defender.name} 反射了 ${reflectDamage} 点伤害给 ${attacker.name}，${attacker.name} 剩余生命值: ${attacker.health}`);
+            const reflectionSkillRef = this.formatSkillReference(defender.reflectionSkillName, '反射效果');
+            log.push(`${reflectionSkillRef}使${defender.name}反射了 ${reflectDamage} 点伤害给 ${attacker.name}，${attacker.name} 剩余生命值: ${attacker.health}`);
             this.recordStateChange(attacker, 'health', previousHealth, attacker.health, {
                 round: this.currentRound,
                 source: this.createEntityReference(defender),
@@ -629,7 +682,9 @@ export class BattleService {
             if (defender.reflectionDuration === 0) {
                 const previousReflection = defender.reflection;
                 defender.reflection = 0;
-                log.push(`${defender.name} 的伤害反射效果结束! 已持续 ${defender.originalReflectionDuration || 0} 次攻击!`);
+                const reflectionSkillRef = this.formatSkillReference(defender.reflectionSkillName, '伤害反射效果');
+                log.push(`${defender.name}的${reflectionSkillRef}结束! 已持续 ${defender.originalReflectionDuration || 0} 次攻击!`);
+                defender.reflectionSkillName = null;
                 this.recordStateChange(defender, 'reflection', previousReflection, defender.reflection, {
                     round: this.currentRound,
                     reason: 'reflection_expired'
@@ -701,7 +756,8 @@ export class BattleService {
                 const previousStacks = player.poison;
                 player.health = Math.max(player.health - poisonDamage, 0);
                 player.poison = Math.max(player.poison - 1, 0);
-                messages.push(`${player.name} 中毒了，受到 ${poisonDamage} 点伤害，剩余生命值: ${player.health}`);
+                const poisonSkillRef = this.formatSkillReference(player.poisonSource?.skillName, '技能效果');
+                messages.push(`${player.name} 受到${poisonSkillRef}影响持续中毒，损失 ${poisonDamage} 点生命值，剩余生命值: ${player.health}`);
                 this.emitEvent('onStatusEffect', {
                     target: player,
                     type: 'poison',
@@ -738,7 +794,8 @@ export class BattleService {
                 if (burnDamage > 0) {
                     const previousHealth = player.health;
                     player.health = Math.max(player.health - burnDamage, 0);
-                    messages.push(`${player.name} 受到燃烧效果影响，损失 ${burnDamage} 点生命值，剩余生命值: ${player.health}`);
+                    const burnSkillRef = this.formatSkillReference(player.burnSource?.skillName, '燃烧效果');
+                    messages.push(`${player.name} 受到${burnSkillRef}影响，损失 ${burnDamage} 点生命值，剩余生命值: ${player.health}`);
                     this.recordStateChange(player, 'health', previousHealth, player.health, {
                         round: this.currentRound,
                         type: 'burn',
@@ -775,8 +832,11 @@ export class BattleService {
                 player.defenseBoostDuration--;
                 if (player.defenseBoostDuration === 0) {
                     const previousDefense = player.defense;
-                    player.defense -= player.skill?.defenseBoost || 0;
-                    messages.push(`${player.name} 的防御提升效果结束! 已持续 ${player.originalDefenseBoostDuration || 0} 次攻击!`);
+                    player.defense -= player.defenseBoostValue || player.skill?.defenseBoost || 0;
+                    const defenseSkillRef = this.formatSkillReference(player.defenseBoostSkillName, '防御提升效果');
+                    messages.push(`${player.name}的${defenseSkillRef}结束! 已持续 ${player.originalDefenseBoostDuration || 0} 次攻击!`);
+                    player.defenseBoostSkillName = null;
+                    player.defenseBoostValue = 0;
                     this.recordStateChange(player, 'defense', previousDefense, player.defense, {
                         round: this.currentRound,
                         reason: 'defense_boost_expired'
@@ -789,9 +849,13 @@ export class BattleService {
                 if (player.attackBoostDuration === 0) {
                     const previousAttack = player.attack;
                     const previousDefense = player.defense;
-                    player.attack -= player.skill?.attackBoost || 0;
-                    player.defense += player.skill?.defensePenalty || 0;
-                    messages.push(`${player.name} 的狂暴状态结束! 已持续 ${player.skill?.turns || 0} 次攻击! 攻击和防御已恢复正常!`);
+                    player.attack -= player.attackBoostValue || player.skill?.attackBoost || 0;
+                    player.defense += player.attackBoostDefensePenalty || player.skill?.defensePenalty || 0;
+                    const attackBoostSkillRef = this.formatSkillReference(player.attackBoostSkillName, '狂暴状态');
+                    messages.push(`${player.name}的${attackBoostSkillRef}结束! 已持续 ${player.originalAttackBoostDuration || player.skill?.turns || 0} 次攻击! 攻击和防御已恢复正常!`);
+                    player.attackBoostSkillName = null;
+                    player.attackBoostValue = 0;
+                    player.attackBoostDefensePenalty = 0;
                     this.recordStateChange(player, 'attack', previousAttack, player.attack, {
                         round: this.currentRound,
                         reason: 'attack_boost_expired'
@@ -808,7 +872,9 @@ export class BattleService {
                 if (player.armorPenetrationDuration === 0) {
                     const previousArmorPenetration = player.armorPenetration;
                     player.armorPenetration = 0;
-                    messages.push(`${player.name} 的破防效果结束! 已持续 ${player.originalArmorPenetrationDuration || 0} 次攻击! 防御力已恢复正常!`);
+                    const armorPenSkillRef = this.formatSkillReference(player.armorPenetrationSourceSkillName, '破防效果');
+                    messages.push(`${player.name}的${armorPenSkillRef}结束! 已持续 ${player.originalArmorPenetrationDuration || 0} 次攻击! 防御力已恢复正常!`);
+                    player.armorPenetrationSourceSkillName = null;
                     this.recordStateChange(player, 'armorPenetration', previousArmorPenetration, player.armorPenetration, {
                         round: this.currentRound,
                         reason: 'armor_penetration_expired'
@@ -823,7 +889,9 @@ export class BattleService {
                     const previousCrit = player.critChance;
                     player.critChance -= boostValue;
                     player.critChanceBoostValue = 0;
-                    messages.push(`${player.name} 的聚气效果结束! 已持续 ${player.originalCritChanceBoostDuration || 0} 次攻击!会心几率已恢复正常!`);
+                    const critSkillRef = this.formatSkillReference(player.critChanceBoostSkillName, '聚气效果');
+                    messages.push(`${player.name}的${critSkillRef}结束! 已持续 ${player.originalCritChanceBoostDuration || 0} 次攻击! 会心几率已恢复正常!`);
+                    player.critChanceBoostSkillName = null;
                     this.recordStateChange(player, 'critChance', previousCrit, player.critChance, {
                         round: this.currentRound,
                         reason: 'crit_chance_expired'
@@ -836,7 +904,9 @@ export class BattleService {
                 if (player.freezeDuration === 0) {
                     const wasFrozen = Boolean(player.freeze);
                     player.freeze = false;
-                    messages.push(`${player.name} 的冰冻效果结束! 已持续 ${player.originalFreezeDuration || 0} 次攻击!`);
+                    const freezeSkillRef = this.formatSkillReference(player.freezeSourceSkillName, '冰冻效果');
+                    messages.push(`${player.name}的${freezeSkillRef}结束! 已持续 ${player.originalFreezeDuration || 0} 次攻击!`);
+                    player.freezeSourceSkillName = null;
                     if (wasFrozen) {
                         this.recordStateChange(player, 'freeze', true, false, {
                             round: this.currentRound,
@@ -851,7 +921,9 @@ export class BattleService {
                 if (player.tauntDuration === 0) {
                     const wasTaunted = Boolean(player.taunted);
                     player.taunted = false;
-                    messages.push(`${player.name} 的嘲讽效果结束! 已持续 ${player.originalTauntDuration || 0} 次攻击!`);
+                    const tauntSkillRef = this.formatSkillReference(player.tauntSourceSkillName, '嘲讽效果');
+                    messages.push(`${player.name}的${tauntSkillRef}结束! 已持续 ${player.originalTauntDuration || 0} 次攻击!`);
+                    player.tauntSourceSkillName = null;
                     if (wasTaunted) {
                         this.recordStateChange(player, 'taunted', true, false, {
                             round: this.currentRound,
@@ -865,8 +937,11 @@ export class BattleService {
                 player.speedBoostDuration--;
                 if (player.speedBoostDuration === 0) {
                     const previousSpeed = player.speed;
-                    player.speed -= player.skill?.speedBoost || 0;
-                    messages.push(`${player.name} 的速度提升效果结束! 已持续 ${player.originalSpeedBoostDuration || 0} 次攻击!`);
+                    player.speed -= player.speedBoostValue || player.skill?.speedBoost || 0;
+                    const speedSkillRef = this.formatSkillReference(player.speedBoostSkillName, '速度提升效果');
+                    messages.push(`${player.name}的${speedSkillRef}结束! 已持续 ${player.originalSpeedBoostDuration || 0} 次攻击!`);
+                    player.speedBoostSkillName = null;
+                    player.speedBoostValue = 0;
                     this.recordStateChange(player, 'speed', previousSpeed, player.speed, {
                         round: this.currentRound,
                         reason: 'speed_boost_expired'
@@ -879,7 +954,9 @@ export class BattleService {
                 if (player.attackReductionDuration === 0) {
                     const previousAttack = player.attack;
                     player.attack += player.originalAttackReductionValue || 0;
-                    messages.push(`${player.name} 的攻击力降低效果结束! 已持续 ${player.originalAttackReductionDuration || 0} 次攻击!`);
+                    const attackReductionSkillRef = this.formatSkillReference(player.attackReductionSkillName, '攻击力降低效果');
+                    messages.push(`${player.name}的${attackReductionSkillRef}结束! 已持续 ${player.originalAttackReductionDuration || 0} 次攻击!`);
+                    player.attackReductionSkillName = null;
                     this.recordStateChange(player, 'attack', previousAttack, player.attack, {
                         round: this.currentRound,
                         reason: 'attack_reduction_expired'
@@ -892,7 +969,9 @@ export class BattleService {
                 if (player.parryChanceDuration === 0) {
                     const previousParry = player.parryChance;
                     player.parryChance = 0;
-                    messages.push(`${player.name} 的招架提升效果结束! 已持续 ${player.originalParryChanceDuration || 0} 次攻击!`);
+                    const parrySkillRef = this.formatSkillReference(player.parryBoostSkillName, '招架提升效果');
+                    messages.push(`${player.name}的${parrySkillRef}结束! 已持续 ${player.originalParryChanceDuration || 0} 次攻击!`);
+                    player.parryBoostSkillName = null;
                     this.recordStateChange(player, 'parryChance', previousParry, player.parryChance, {
                         round: this.currentRound,
                         reason: 'parry_boost_expired'
@@ -1036,6 +1115,11 @@ export class BattleService {
         const flag = player === this.player1 ? 'p1Stunned' : 'p2Stunned';
         const previous = this[flag];
         this[flag] = stunned;
+        if (stunned && context?.skill) {
+            player.stunnedSkillName = context.skill;
+        } else if (!stunned) {
+            player.stunnedSkillName = null;
+        }
         if (previous !== stunned) {
             this.recordStateChange(player, 'stunned', previous, stunned, context);
         }
