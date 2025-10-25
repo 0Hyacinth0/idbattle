@@ -5,8 +5,6 @@ export class BattleService {
     constructor() {
         this.player1 = null;
         this.player2 = null;
-        this.p1Stunned = false;
-        this.p2Stunned = false;
         this.updatePlayerInfoCallback = null;
         this.eventHandlers = {};
         this.randomFn = Math.random;
@@ -20,8 +18,6 @@ export class BattleService {
     setPlayers(player1, player2, updateCallback) {
         this.player1 = player1;
         this.player2 = player2;
-        this.p1Stunned = false;
-        this.p2Stunned = false;
         this.updatePlayerInfoCallback = updateCallback;
     }
 
@@ -88,9 +84,6 @@ export class BattleService {
         const log = [];
         this.textLogLines = log;
         let round = 1;
-
-        this.p1Stunned = false;
-        this.p2Stunned = false;
 
         this.initStructuredLog();
         this.recordKeyframe('battle_start', {
@@ -195,25 +188,6 @@ export class BattleService {
 
     async executeSingleAttack(attacker, defender) {
         const messages = [];
-        const stunnedFlag = attacker === this.player1 ? 'p1Stunned' : 'p2Stunned';
-
-        if (this[stunnedFlag]) {
-            const stunSkillRef = this.formatSkillReference(attacker.stunnedSkillName, '技能效果');
-            messages.push(`${attacker.name}受到了${stunSkillRef}的眩晕影响，无法行动!`);
-            this.setStunState(attacker, false, {
-                round: this.currentRound,
-                reason: 'stun_consumed'
-            });
-            this.recordEvent('action_blocked', {
-                actor: this.createEntityReference(attacker),
-                parameters: {
-                    round: this.currentRound,
-                    reason: 'stun'
-                }
-            });
-            return messages;
-        }
-
         if (attacker.freeze) {
             const freezeSkillRef = this.formatSkillReference(attacker.freezeSourceSkillName, '技能效果');
             messages.push(`${attacker.name}受到${freezeSkillRef}影响被冰冻，无法行动!`);
@@ -435,28 +409,6 @@ export class BattleService {
                     skill: attacker.skill.name,
                     type: 'life_steal'
                 });
-            } else if (attacker.skill.stunChance) {
-                if (this.random() < attacker.skill.stunChance) {
-                    const stunSkillRef = this.formatSkillReference(attacker.skill);
-                    log.push(`${defender.name} 被${stunSkillRef}眩晕!`);
-                    this.setStunState(defender, true, {
-                        round: this.currentRound,
-                        source: this.createEntityReference(attacker),
-                        skill: attacker.skill.name
-                    });
-                    this.recordEvent('status_applied', {
-                        actor: this.createEntityReference(attacker),
-                        target: this.createEntityReference(defender),
-                        parameters: {
-                            round: this.currentRound,
-                            type: 'stun',
-                            duration: attacker.skill.turns ?? 1
-                        }
-                    });
-                } else {
-                    const stunSkillRef = this.formatSkillReference(attacker.skill);
-                    log.push(`${defender.name} 成功抵抗了${stunSkillRef}的眩晕效果!`);
-                }
             } else if (attacker.skill.attackBoost) {
                 const previousAttack = attacker.attack;
                 const previousDefense = attacker.defense;
@@ -532,22 +484,6 @@ export class BattleService {
                     source: this.createEntityReference(attacker),
                     skill: attacker.skill.name
                 });
-            } else if (attacker.skill.burnDamage) {
-                const previousBurn = defender.burn || 0;
-                defender.burn = attacker.skill.turns;
-                defender.originalBurnDuration = attacker.skill.turns;
-                defender.burnSource = {
-                    name: attacker.name,
-                    role: attacker.role,
-                    skillName: this.getSkillName(attacker.skill)
-                };
-                defender.burnDamageValue = attacker.skill.burnDamage;
-                log.push(`${this.formatSkillReference(attacker.skill)}让${defender.name}陷入燃烧状态，将在 ${attacker.skill.turns || 0} 回合内每回合受到 ${attacker.skill.burnDamage} 点伤害!`);
-                this.recordStateChange(defender, 'burn', previousBurn, defender.burn, {
-                    round: this.currentRound,
-                    source: this.createEntityReference(attacker),
-                    skill: attacker.skill.name
-                });
             } else if (attacker.skill.freezeChance) {
                 if (this.random() < attacker.skill.freezeChance) {
                     const previousFreeze = Boolean(defender.freeze);
@@ -607,19 +543,6 @@ export class BattleService {
                 attacker.parryBoostSkillName = this.getSkillName(attacker.skill);
                 log.push(`${this.formatSkillReference(attacker.skill)}提升了${attacker.name}的招架率 ${Math.floor(attacker.skill.parryBoost * 100)}%，持续${attacker.skill.turns || 0} 次攻击!`);
                 this.recordStateChange(attacker, 'parryChance', previousParry, attacker.parryChance, {
-                    round: this.currentRound,
-                    source: this.createEntityReference(attacker),
-                    skill: attacker.skill.name
-                });
-            } else if (attacker.skill.speedBoost) {
-                const previousSpeed = attacker.speed;
-                attacker.speed += attacker.skill.speedBoost;
-                attacker.speedBoostDuration = attacker.skill.turns;
-                attacker.originalSpeedBoostDuration = attacker.skill.turns;
-                attacker.speedBoostSkillName = this.getSkillName(attacker.skill);
-                attacker.speedBoostValue = attacker.skill.speedBoost;
-                log.push(`${this.formatSkillReference(attacker.skill)}提升了${attacker.name}的速度 ${attacker.skill.speedBoost} 点，持续 ${attacker.skill.turns || 0} 次攻击!`);
-                this.recordStateChange(attacker, 'speed', previousSpeed, attacker.speed, {
                     round: this.currentRound,
                     source: this.createEntityReference(attacker),
                     skill: attacker.skill.name
@@ -788,46 +711,6 @@ export class BattleService {
                 }
             }
 
-            if (player.burn > 0) {
-                const burnDamage = player.burnDamageValue || 0;
-                const previousStacks = player.burn;
-                if (burnDamage > 0) {
-                    const previousHealth = player.health;
-                    player.health = Math.max(player.health - burnDamage, 0);
-                    const burnSkillRef = this.formatSkillReference(player.burnSource?.skillName, '燃烧效果');
-                    messages.push(`${player.name} 受到${burnSkillRef}影响，损失 ${burnDamage} 点生命值，剩余生命值: ${player.health}`);
-                    this.recordStateChange(player, 'health', previousHealth, player.health, {
-                        round: this.currentRound,
-                        type: 'burn',
-                        source: player.burnSource || null
-                    });
-                }
-                const nextStacks = Math.max(previousStacks - 1, 0);
-                if (previousStacks !== nextStacks) {
-                    this.recordStateChange(player, 'burn', previousStacks, nextStacks, {
-                        round: this.currentRound,
-                        type: 'burn_duration'
-                    });
-                }
-                player.burn = nextStacks;
-                if (burnDamage > 0) {
-                    this.recordEvent('status_tick', {
-                        actor: this.createEntityReference(player.burnSource || null),
-                        target: this.createEntityReference(player),
-                        parameters: {
-                            round: this.currentRound,
-                            type: 'burn',
-                            damage: burnDamage,
-                            remaining: player.burn
-                        }
-                    });
-                }
-                if (player.burn === 0) {
-                    player.burnSource = null;
-                    player.burnDamageValue = 0;
-                }
-            }
-
             if (player.defenseBoostDuration > 0) {
                 player.defenseBoostDuration--;
                 if (player.defenseBoostDuration === 0) {
@@ -933,22 +816,6 @@ export class BattleService {
                 }
             }
 
-            if (player.speedBoostDuration > 0) {
-                player.speedBoostDuration--;
-                if (player.speedBoostDuration === 0) {
-                    const previousSpeed = player.speed;
-                    player.speed -= player.speedBoostValue || player.skill?.speedBoost || 0;
-                    const speedSkillRef = this.formatSkillReference(player.speedBoostSkillName, '速度提升效果');
-                    messages.push(`${player.name}的${speedSkillRef}结束! 已持续 ${player.originalSpeedBoostDuration || 0} 次攻击!`);
-                    player.speedBoostSkillName = null;
-                    player.speedBoostValue = 0;
-                    this.recordStateChange(player, 'speed', previousSpeed, player.speed, {
-                        round: this.currentRound,
-                        reason: 'speed_boost_expired'
-                    });
-                }
-            }
-
             if (player.attackReductionDuration > 0) {
                 player.attackReductionDuration--;
                 if (player.attackReductionDuration === 0) {
@@ -1037,7 +904,6 @@ export class BattleService {
         if (!player) {
             return null;
         }
-        const stunned = player === this.player1 ? this.p1Stunned : this.p2Stunned;
         return {
             reference: this.createEntityReference(player),
             health: player.health,
@@ -1045,10 +911,8 @@ export class BattleService {
             shield: player.shield || 0,
             statuses: {
                 poison: player.poison || 0,
-                burn: player.burn || 0,
                 freeze: Boolean(player.freeze),
                 taunted: Boolean(player.taunted),
-                stunned,
                 reflection: player.reflection || 0
             }
         };
@@ -1111,18 +975,5 @@ export class BattleService {
         logCallback(payload);
     }
 
-    setStunState(player, stunned, context = {}) {
-        const flag = player === this.player1 ? 'p1Stunned' : 'p2Stunned';
-        const previous = this[flag];
-        this[flag] = stunned;
-        if (stunned && context?.skill) {
-            player.stunnedSkillName = context.skill;
-        } else if (!stunned) {
-            player.stunnedSkillName = null;
-        }
-        if (previous !== stunned) {
-            this.recordStateChange(player, 'stunned', previous, stunned, context);
-        }
-    }
 }
 

@@ -13,13 +13,11 @@ function ensurePlayerState(basePlayer, role) {
     clone.health = typeof clone.health === 'number' ? clone.health : clone.maxHealth;
     clone.maxHealth = typeof clone.maxHealth === 'number' ? clone.maxHealth : clone.health;
     clone.poison = clone.poison || 0;
-    clone.burn = clone.burn || 0;
     clone.freeze = clone.freeze || false;
     clone.taunted = clone.taunted || false;
     clone.shield = clone.shield || 0;
     clone.reflection = clone.reflection || 0;
     clone.poisonSource = null;
-    clone.burnSource = null;
     return clone;
 }
 

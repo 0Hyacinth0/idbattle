@@ -34,7 +34,6 @@ function generateBaseTemplate(name) {
             speed: sanitized.speed,
             skill: defaultSkill,
             poison: 0,
-            burn: 0,
             freeze: false,
             taunted: false,
             shield: sanitized.shield,

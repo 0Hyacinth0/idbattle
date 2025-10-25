@@ -222,7 +222,7 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
         // 计算考虑临时效果后的实际属性值
         let actualAttack = player.attack;
         let actualDefense = player.defense;
-        let actualSpeed = player.speed;
+        const actualSpeed = player.speed;
 
         // 应用攻击相关临时效果
         if (player.attackBoostDuration > 0) {
@@ -240,23 +240,13 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
             actualDefense -= player.skill?.defensePenalty || 0;
         }
 
-        // 应用速度相关临时效果
-        if (player.speedBoostDuration > 0) {
-            actualSpeed += player.skill?.speedBoost || 0;
-        }
-
         elements.attack.textContent = formatNumericDisplay(actualAttack);
         elements.defense.textContent = formatNumericDisplay(actualDefense);
         elements.speed.textContent = formatNumericDisplay(actualSpeed);
 
         elements.attack.style.color = (player.attackBoostDuration > 0 || player.attackReductionDuration > 0) ? '#FF9800' : '';
         elements.defense.style.color = (player.defenseBoostDuration > 0 || player.attackBoostDuration > 0) ? '#FF9800' : '';
-        elements.speed.style.color = player.speedBoostDuration > 0 ? '#FF9800' : '';
-
-        const speedLabel = document.querySelector(`[data-speed-label="${prefix}"]`);
-        if (speedLabel) {
-            speedLabel.textContent = '加速';
-        }
+        elements.speed.style.color = '';
     }
 
     if (shouldUpdate('equipment')) {
@@ -291,7 +281,6 @@ function updatePlayerInfo(player, isPlayer1, options = {}) {
     if (shouldUpdate('status')) {
         const statusEffects = [];
         if (player.poison > 0) statusEffects.push(`中毒 (${player.poison}回合)`);
-        if (player.burn > 0) statusEffects.push(`燃烧 (${player.burn}回合)`);
         if (player.freeze) statusEffects.push('冰冻');
         if (player.taunted) statusEffects.push('嘲讽');
         if (player.shield > 0) statusEffects.push(`护盾 (${player.shield})`);
