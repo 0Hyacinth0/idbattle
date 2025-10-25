@@ -40,14 +40,6 @@ function createSummary(player, role) {
     };
 }
 
-function formatPercent(value) {
-    if (!Number.isFinite(value)) {
-        return '0%';
-    }
-    const percentage = Math.round(value * 1000) / 10;
-    return `${percentage.toFixed(1).replace(/\.0$/, '')}%`;
-}
-
 function resolveRole(entity, nameMap) {
     if (!entity) {
         return null;
@@ -72,79 +64,6 @@ function ensureSkillCount(summary, skillName) {
 
 function pushDetail(list, detail) {
     list.push(detail);
-}
-
-function analyseVerdict(playerSummaries) {
-    const evaluations = playerSummaries.map((summary) => {
-        const attackCount = summary.attackCount || 0;
-        const actualSkillRate = attackCount ? summary.skillTriggerCount / attackCount : 0;
-        const expectedSkillRate = typeof summary.skillChance === 'number' ? summary.skillChance : null;
-        const skillDiff = expectedSkillRate !== null ? actualSkillRate - expectedSkillRate : 0;
-        const actualCritRate = attackCount ? summary.criticalCount / attackCount : 0;
-        const expectedCritRate = typeof summary.critChance === 'number' ? summary.critChance : null;
-        const critDiff = expectedCritRate !== null ? actualCritRate - expectedCritRate : 0;
-        return {
-            summary,
-            attackCount,
-            actualSkillRate,
-            expectedSkillRate,
-            skillDiff,
-            actualCritRate,
-            expectedCritRate,
-            critDiff
-        };
-    });
-
-    const maxDeviation = evaluations.reduce((max, current) => {
-        const skillDeviation = Math.abs(current.skillDiff || 0);
-        const critDeviation = Math.abs(current.critDiff || 0);
-        return Math.max(max, skillDeviation, critDeviation);
-    }, 0);
-
-    const verdict = maxDeviation >= 0.18 ? '运气局' : '实力局';
-
-    const reasons = evaluations.flatMap(({ summary, attackCount, actualSkillRate, expectedSkillRate, actualCritRate, expectedCritRate }) => {
-        const result = [];
-        const name = summary.name || ROLE_LABEL[summary.role] || summary.role;
-        if (expectedSkillRate !== null) {
-            result.push(`${name} 技能触发率 ${formatPercent(actualSkillRate)} (期望 ${formatPercent(expectedSkillRate)})`);
-        } else {
-            result.push(`${name} 技能触发 ${summary.skillTriggerCount} 次 / ${attackCount} 次攻击`);
-        }
-        if (expectedCritRate !== null) {
-            result.push(`${name} 会心率 ${formatPercent(actualCritRate)} (期望 ${formatPercent(expectedCritRate)})`);
-        } else {
-            result.push(`${name} 会心 ${summary.criticalCount} 次 / ${attackCount} 次攻击`);
-        }
-        return result;
-    });
-
-    const highlight = evaluations
-        .filter(({ skillDiff, critDiff }) => Math.abs(skillDiff || 0) >= 0.18 || Math.abs(critDiff || 0) >= 0.18)
-        .map(({ summary, skillDiff, critDiff, actualSkillRate, expectedSkillRate, actualCritRate, expectedCritRate }) => {
-            const fragments = [];
-            const name = summary.name || ROLE_LABEL[summary.role] || summary.role;
-            if (expectedSkillRate !== null && Math.abs(skillDiff || 0) >= 0.18) {
-                fragments.push(`${name} 的技能触发偏离 ${formatPercent(actualSkillRate)} / ${formatPercent(expectedSkillRate)}`);
-            }
-            if (expectedCritRate !== null && Math.abs(critDiff || 0) >= 0.18) {
-                fragments.push(`${name} 的会心率偏离 ${formatPercent(actualCritRate)} / ${formatPercent(expectedCritRate)}`);
-            }
-            return fragments.join('，');
-        })
-        .filter(Boolean)
-        .join('；');
-
-    const summaryText = verdict === '运气局'
-        ? (highlight || '多次关键触发大幅偏离预期，战局受到运气影响明显。')
-        : '技能与会心触发率与期望值差距不大，整体表现偏向实力。';
-
-    return {
-        verdict,
-        reasons,
-        highlight,
-        summary: summaryText
-    };
 }
 
 export function buildBattleSummary({
@@ -293,8 +212,6 @@ export function buildBattleSummary({
     const battleEnd = (resolvedLog.keyframes || []).find((item) => item.type === 'battle_end');
     const totalRounds = battleEnd?.detail?.rounds ?? null;
 
-    const analysis = analyseVerdict(Object.values(playersByRole));
-
     return {
         textLog,
         players: {
@@ -309,7 +226,6 @@ export function buildBattleSummary({
         },
         rounds: totalRounds,
         winner: winner ? (winner.name || winner.role || '') : null,
-        isDraw: Boolean(isDraw || (!winner && !isDraw && playersByRole.player1.damageTaken === playersByRole.player2.damageTaken)),
-        analysis
+        isDraw: Boolean(isDraw || (!winner && !isDraw && playersByRole.player1.damageTaken === playersByRole.player2.damageTaken))
     };
 }

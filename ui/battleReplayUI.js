@@ -64,6 +64,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
     let lastBattlePayload = null;
     let summaryCache = null;
     let isScrubbing = false;
+    let hasReplayActivated = false;
 
     const disableControls = () => {
         playButton.disabled = true;
@@ -104,6 +105,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         lastBattlePayload = null;
         summaryCache = null;
         isScrubbing = false;
+        hasReplayActivated = false;
         playButton.textContent = '播放';
         setActiveSpeedButton(speedButtons, speedButtons[0] || null);
         disableControls();
@@ -159,7 +161,28 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         }
         const player1 = payload.players?.player1 || null;
         const player2 = payload.players?.player2 || null;
-        renderBattleLogSnapshot(controller.getLogPayload(), payload.logIndex ?? null, player1, player2);
+        const logPayload = controller.getLogPayload();
+        if (!logPayload) {
+            return;
+        }
+
+        const logIndex = Number.isInteger(payload?.logIndex) ? payload.logIndex : null;
+        const currentTime = Number.isFinite(payload?.time) ? payload.time : 0;
+        const firstEntryTimestamp = Number.isFinite(payload?.logEntries?.[0]?.timestamp)
+            ? payload.logEntries[0].timestamp
+            : 0;
+        const atInitialState = (!Number.isInteger(logIndex) || logIndex <= 1) && currentTime <= firstEntryTimestamp;
+
+        if (!hasReplayActivated && !controller.isPlaying && !isScrubbing && atInitialState) {
+            return;
+        }
+
+        if (!hasReplayActivated) {
+            hasReplayActivated = true;
+        }
+
+        const visibleCount = Number.isInteger(logIndex) ? logIndex : null;
+        renderBattleLogSnapshot(logPayload, visibleCount, player1, player2);
     };
 
     const updateTimeline = (payload) => {
@@ -236,6 +259,18 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         if (!controller) {
             return;
         }
+        if (!hasReplayActivated) {
+            hasReplayActivated = true;
+            controller.seekTo(0);
+            controller.play();
+            return;
+        }
+        if (!controller.isPlaying) {
+            const duration = controller.getDuration();
+            if (Number.isFinite(duration) && duration > 0 && controller.currentTime >= duration) {
+                controller.seekTo(0);
+            }
+        }
         controller.togglePlay();
     });
 
@@ -256,6 +291,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
     if (slider) {
         slider.addEventListener('pointerdown', () => {
             isScrubbing = true;
+            hasReplayActivated = true;
             if (controller) {
                 controller.pause();
             }
@@ -284,6 +320,7 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
             if (Number.isNaN(selected)) {
                 return;
             }
+            hasReplayActivated = true;
             controller.pause();
             controller.jumpToRound(selected);
         });
