@@ -185,6 +185,32 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         renderBattleLogSnapshot(logPayload, visibleCount, player1, player2);
     };
 
+    const resolveDisplayedRound = (payload) => {
+        if (!payload) {
+            return 0;
+        }
+
+        const logIndex = Number.isInteger(payload.logIndex) ? payload.logIndex : null;
+        const logEntries = Array.isArray(payload.logEntries) ? payload.logEntries : null;
+
+        if (logEntries && logIndex && logIndex > 0) {
+            const boundedIndex = Math.min(logIndex, logEntries.length);
+            for (let index = boundedIndex - 1; index >= 0; index -= 1) {
+                const roundValue = Number(logEntries[index]?.round);
+                if (Number.isInteger(roundValue) && roundValue > 0) {
+                    return roundValue;
+                }
+            }
+        }
+
+        const payloadRound = Number(payload.round);
+        if (Number.isInteger(payloadRound) && payloadRound > 0) {
+            return payloadRound;
+        }
+
+        return 0;
+    };
+
     const updateTimeline = (payload) => {
         if (!payload) {
             return;
@@ -194,8 +220,10 @@ export function initBattleReplayUI({ updatePlayerInfo }) {
         }
         currentTimeLabel.textContent = formatTime(payload.time);
         totalTimeLabel.textContent = formatTime(payload.duration);
-        if (payload.round && payload.round > 0) {
-            roundLabel.textContent = `当前：第 ${payload.round} 回合`;
+
+        const activeRound = resolveDisplayedRound(payload);
+        if (activeRound > 0) {
+            roundLabel.textContent = `当前：第 ${activeRound} 回合`;
         } else {
             roundLabel.textContent = '当前：准备阶段';
         }
