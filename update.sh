@@ -38,4 +38,4 @@ echo -e "构建结果保存在 ${GREEN}dist/${NC} 目录中。"
 
 # 备注: 如果你在服务器上使用 pm2 托管
 # 请确保 package.json 提供了 start 脚本或直接运行 dist
-pm2 restart idbattle-frontend || pm2 serve ./dist 3000 --name "idbattle-frontend" --spa
+pm2 restart idbattle-frontend || pm2 serve ./dist 8000 --name "idbattle-frontend" --spa
