@@ -323,7 +323,7 @@ function displayBattleLog(logPayload, player1, player2) {
     ];
     state.playerRefs = { player1, player2 };
 
-    const logLines = text.split('\n');
+    const logLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     const newLines = logLines.slice(state.renderedLines);
     if (!newLines.length) {
         return;
@@ -388,7 +388,7 @@ function renderBattleLogSnapshot(logPayload, visibleCount = null, player1 = null
     ];
     state.players = players;
 
-    const lines = text ? text.split('\n') : [];
+    const lines = text ? text.split('\n').map(l => l.trim()).filter(l => l.length > 0) : [];
     const count = Number.isInteger(visibleCount) ? Math.min(Math.max(visibleCount, 0), lines.length) : lines.length;
     const subset = lines.slice(0, count);
     const highlightLatest = options.highlightLatest !== false;

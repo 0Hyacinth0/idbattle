@@ -48,12 +48,12 @@ const ATTRIBUTE_LABELS = {
 };
 
 const RARITY_STYLES = {
-    '破败': { color: '#8f93a3', label: '破败' },
-    '普通': { color: '#f4f1ff', label: '普通' },
-    '精巧': { color: '#6dd39e', label: '精巧' },
-    '卓越': { color: '#59a6ff', label: '卓越' },
-    '珍奇': { color: '#c282ff', label: '珍奇' },
-    '稀世': { color: '#ff9b52', label: '稀世' }
+    '破败': { color: 'var(--rarity-poor, #8f93a3)', label: '破败' },
+    '普通': { color: 'var(--rarity-normal, #f4f1ff)', label: '普通' },
+    '精巧': { color: 'var(--rarity-magic, #6dd39e)', label: '精巧' },
+    '卓越': { color: 'var(--rarity-rare, #59a6ff)', label: '卓越' },
+    '珍奇': { color: 'var(--rarity-epic, #c282ff)', label: '珍奇' },
+    '稀世': { color: 'var(--rarity-legendary, #ff9b52)', label: '稀世' }
 };
 
 function getRarityStyle(quality) {
@@ -107,6 +107,7 @@ function buildEquipmentTooltip(type, item) {
         rarityChip.style.setProperty('--rarity-color', rarityStyle.color);
         rarityChip.setAttribute('aria-hidden', 'true');
         header.appendChild(rarityChip);
+        equipmentDiv.style.setProperty('--item-rarity-color', rarityStyle.color);
     }
 
     equipmentDiv.appendChild(header);
@@ -387,4 +388,4 @@ function initPlayerPanels() {
     });
 }
 
-export { updatePlayerInfo, initPlayerPanels };
+export { updatePlayerInfo, initPlayerPanels, getRarityStyle };

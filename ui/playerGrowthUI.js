@@ -1,4 +1,5 @@
 import { getBasePlayerProfile } from '../models/player.js';
+import { getRarityStyle } from './playerUI.js';
 import {
     EquipmentType,
     equipmentByType,
@@ -128,6 +129,11 @@ function renderEquipmentPreview(panel, state) {
         }
         const itemWrapper = document.createElement('div');
         itemWrapper.className = 'equipment-preview-item';
+        
+        const rarityStyle = getRarityStyle(item.quality);
+        if (rarityStyle) {
+            itemWrapper.style.setProperty('--item-rarity-color', rarityStyle.color);
+        }
 
         const header = document.createElement('div');
         header.className = 'equipment-preview-item__header';
