@@ -873,6 +873,10 @@ button:disabled {
     justify-content: space-between;
 }
 
+.player-card__header h2 {
+    margin-top: 8px;
+}
+
 .player-card__summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
