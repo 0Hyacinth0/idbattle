@@ -1864,6 +1864,7 @@ button:disabled {
 .apple-nav__actions .theme-toggle-btn:hover {
   background: rgba(120, 120, 128, 0.12);
 }
+
 .view-switcher__button { border-radius: 980px; border: none; background: transparent; color: var(--text-muted); box-shadow: none; position: relative; padding: 6px 14px; font-size: 14px;}
 .view-switcher__button:hover { background: rgba(120, 120, 128, 0.12); }
 .view-switcher__button--active { background: transparent; box-shadow: none; color: var(--text-primary); font-weight: 600;}

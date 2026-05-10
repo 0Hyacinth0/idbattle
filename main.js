@@ -56,7 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme(currentTheme);
     
     if (themeBtn) {
+        let rotation = 0;
         themeBtn.addEventListener('click', () => {
+            rotation += 180;
+            themeBtn.style.transition = 'transform 0.5s ease-out';
+            themeBtn.style.transform = `rotate(${rotation}deg)`;
             const isDark = document.documentElement.hasAttribute('data-theme');
             const newTheme = isDark ? 'light' : 'dark';
             localStorage.setItem('theme', newTheme);

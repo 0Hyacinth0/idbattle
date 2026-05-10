@@ -1,313 +1,471 @@
-# Design System Inspired by Apple
+# ID Battle 设计规范文档
 
-## 1. Visual Theme & Atmosphere
+本文档定义了 ID Battle 项目的完整 UI 设计系统，确保界面设计的一致性和规范性。
 
-Apple's website is a masterclass in controlled drama — vast expanses of pure black and near-white serve as cinematic backdrops for products that are photographed as if they were sculptures in a gallery. The design philosophy is reductive to its core: every pixel exists in service of the product, and the interface itself retreats until it becomes invisible. This is not minimalism as aesthetic preference; it is minimalism as reverence for the object.
+---
 
-The typography anchors everything. San Francisco (SF Pro Display for large sizes, SF Pro Text for body) is Apple's proprietary typeface, engineered with optical sizing that automatically adjusts letterforms depending on point size. At display sizes (56px), weight 600 with a tight line-height of 1.07 and subtle negative letter-spacing (-0.28px) creates headlines that feel machined rather than typeset — precise, confident, and unapologetically direct. At body sizes (17px), the tracking loosens slightly (-0.374px) and line-height opens to 1.47, creating a reading rhythm that is comfortable without ever feeling slack.
+## 目录
 
-The color story is starkly binary. Product sections alternate between pure black (`#000000`) backgrounds with white text and light gray (`#f5f5f7`) backgrounds with near-black text (`#1d1d1f`). This creates a cinematic pacing — dark sections feel immersive and premium, light sections feel open and informational. The only chromatic accent is Apple Blue (`#0071e3`), reserved exclusively for interactive elements: links, buttons, and focus states. This singular accent color in a sea of neutrals gives every clickable element unmistakable visibility.
+1. [设计理念](#1-设计理念)
+2. [色彩系统](#2-色彩系统)
+3. [排版规范](#3-排版规范)
+4. [组件样式](#4-组件样式)
+5. [布局规则](#5-布局规则)
+6. [玻璃质感效果](#6-玻璃质感效果)
+7. [动画系统](#7-动画系统)
+8. [响应式设计](#8-响应式设计)
 
-**Key Characteristics:**
-- SF Pro Display/Text with optical sizing — letterforms adapt automatically to size context
-- Binary light/dark section rhythm: black (`#000000`) alternating with light gray (`#f5f5f7`)
-- Single accent color: Apple Blue (`#0071e3`) reserved exclusively for interactive elements
-- Product-as-hero photography on solid color fields — no gradients, no textures, no distractions
-- Extremely tight headline line-heights (1.07-1.14) creating compressed, billboard-like impact
-- Full-width section layout with centered content — the viewport IS the canvas
-- Pill-shaped CTAs (980px radius) creating soft, approachable action buttons
-- Generous whitespace between sections allowing each product moment to breathe
+---
 
-## 2. Color Palette & Roles
+## 1. 设计理念
 
-### Primary
-- **Pure Black** (`#000000`): Hero section backgrounds, immersive product showcases. The darkest canvas for the brightest products.
-- **Light Gray** (`#f5f5f7`): Alternate section backgrounds, informational areas. Not white — the slight blue-gray tint prevents sterility.
-- **Near Black** (`#1d1d1f`): Primary text on light backgrounds, dark button fills. Slightly warmer than pure black for comfortable reading.
+本项目采用 **Liquid Glass（液态玻璃）** 设计语言，灵感来源于 Apple 的设计哲学。核心特点包括：
 
-### Interactive
-- **Apple Blue** (`#0071e3`): `--sk-focus-color`, primary CTA backgrounds, focus rings. The ONLY chromatic color in the interface.
-- **Link Blue** (`#0066cc`): `--sk-body-link-color`, inline text links. Slightly darker than Apple Blue for text-level readability.
-- **Bright Blue** (`#2997ff`): Links on dark backgrounds. Higher luminance for contrast on black sections.
+- **极简主义**：界面元素精简，内容为王
+- **毛玻璃质感**：半透明背景配合模糊效果，创造层次感
+- **高光边缘**：玻璃边缘的白色高光渐变，增强立体感
+- **色彩克制**：主色调为中性色，强调色仅用于交互元素
 
-### Text
-- **White** (`#ffffff`): Text on dark backgrounds, button text on blue/dark CTAs.
-- **Near Black** (`#1d1d1f`): Primary body text on light backgrounds.
-- **Black 80%** (`rgba(0, 0, 0, 0.8)`): Secondary text, nav items on light backgrounds. Slightly softened.
-- **Black 48%** (`rgba(0, 0, 0, 0.48)`): Tertiary text, disabled states, carousel controls.
+---
 
-### Surface & Dark Variants
-- **Dark Surface 1** (`#272729`): Card backgrounds in dark sections.
-- **Dark Surface 2** (`#262628`): Subtle surface variation in dark contexts.
-- **Dark Surface 3** (`#28282a`): Elevated cards on dark backgrounds.
-- **Dark Surface 4** (`#2a2a2d`): Highest dark surface elevation.
-- **Dark Surface 5** (`#242426`): Deepest dark surface tone.
+## 2. 色彩系统
 
-### Button States
-- **Button Active** (`#ededf2`): Active/pressed state for light buttons.
-- **Button Default Light** (`#fafafc`): Search/filter button backgrounds.
-- **Overlay** (`rgba(210, 210, 215, 0.64)`): Media control scrims, overlays.
-- **White 32%** (`rgba(255, 255, 255, 0.32)`): Hover state on dark modal close buttons.
+### 2.1 亮色模式 (Light Mode)
 
-### Shadows
-- **Card Shadow** (`rgba(0, 0, 0, 0.22) 3px 5px 30px 0px`): Soft, diffused elevation for product cards. Offset and wide blur create a natural, photographic shadow.
+#### 背景色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--bg-body` | `#f5f5f7` | 页面主背景 |
+| `--bg-panel` | `linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%)` | 面板背景（渐变半透明） |
+| `--bg-panel-light` | `linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%)` | 轻量面板背景 |
 
-## 3. Typography Rules
+#### 文字色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--text-primary` | `#1d1d1f` | 主要文字 |
+| `--text-muted` | `rgba(0, 0, 0, 0.56)` | 次要/提示文字 |
+| `--button-text` | `#ffffff` | 按钮文字 |
 
-### Font Family
-- **Display**: `SF Pro Display`, with fallbacks: `SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif`
-- **Body**: `SF Pro Text`, with fallbacks: `SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif`
-- SF Pro Display is used at 20px and above; SF Pro Text is optimized for 19px and below.
+#### 强调色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--accent-blue` | `#0071e3` | 主要交互色（链接、按钮、焦点） |
+| `--accent-blue-dark` | `#0077ed` | 蓝色深色变体 |
+| `--accent-red` | `#ff3b30` | 危险/错误提示、玩家2标识 |
+| `--accent-gold` | `#f59e0b` | 警告、金币、高亮 |
+| `--accent-green` | `#34c759` | 成功、生命值、正面状态 |
 
-### Hierarchy
+#### 边框色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--border-light` | `rgba(255, 255, 255, 0.5)` | 通用边框 |
+| `--border-dark` | `transparent` | 透明边框占位 |
 
-| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
-|------|------|------|--------|-------------|----------------|-------|
-| Display Hero | SF Pro Display | 56px (3.50rem) | 600 | 1.07 (tight) | -0.28px | Product launch headlines, maximum impact |
-| Section Heading | SF Pro Display | 40px (2.50rem) | 600 | 1.10 (tight) | normal | Feature section titles |
-| Tile Heading | SF Pro Display | 28px (1.75rem) | 400 | 1.14 (tight) | 0.196px | Product tile headlines |
-| Card Title | SF Pro Display | 21px (1.31rem) | 700 | 1.19 (tight) | 0.231px | Bold card headings |
-| Sub-heading | SF Pro Display | 21px (1.31rem) | 400 | 1.19 (tight) | 0.231px | Regular card headings |
-| Nav Heading | SF Pro Text | 34px (2.13rem) | 600 | 1.47 | -0.374px | Large navigation headings |
-| Sub-nav | SF Pro Text | 24px (1.50rem) | 300 | 1.50 | normal | Light sub-navigation text |
-| Body | SF Pro Text | 17px (1.06rem) | 400 | 1.47 | -0.374px | Standard reading text |
-| Body Emphasis | SF Pro Text | 17px (1.06rem) | 600 | 1.24 (tight) | -0.374px | Emphasized body text, labels |
-| Button Large | SF Pro Text | 18px (1.13rem) | 300 | 1.00 (tight) | normal | Large button text, light weight |
-| Button | SF Pro Text | 17px (1.06rem) | 400 | 2.41 (relaxed) | normal | Standard button text |
-| Link | SF Pro Text | 14px (0.88rem) | 400 | 1.43 | -0.224px | Body links, "Learn more" |
-| Caption | SF Pro Text | 14px (0.88rem) | 400 | 1.29 (tight) | -0.224px | Secondary text, descriptions |
-| Caption Bold | SF Pro Text | 14px (0.88rem) | 600 | 1.29 (tight) | -0.224px | Emphasized captions |
-| Micro | SF Pro Text | 12px (0.75rem) | 400 | 1.33 | -0.12px | Fine print, footnotes |
-| Micro Bold | SF Pro Text | 12px (0.75rem) | 600 | 1.33 | -0.12px | Bold fine print |
-| Nano | SF Pro Text | 10px (0.63rem) | 400 | 1.47 | -0.08px | Legal text, smallest size |
+### 2.2 暗色模式 (Dark Mode)
 
-### Principles
-- **Optical sizing as philosophy**: SF Pro automatically switches between Display and Text optical sizes. Display versions have wider letter spacing and thinner strokes optimized for large sizes; Text versions are tighter and sturdier for small sizes. This means the font literally changes its DNA based on context.
-- **Weight restraint**: The scale spans 300 (light) to 700 (bold) but most text lives at 400 (regular) and 600 (semibold). Weight 300 appears only on large decorative text. Weight 700 is rare, used only for bold card titles.
-- **Negative tracking at all sizes**: Unlike most systems that only track headlines, Apple applies subtle negative letter-spacing even at body sizes (-0.374px at 17px, -0.224px at 14px, -0.12px at 12px). This creates universally tight, efficient text.
-- **Extreme line-height range**: Headlines compress to 1.07 while body text opens to 1.47, and some button contexts stretch to 2.41. This dramatic range creates clear visual hierarchy through rhythm alone.
+#### 背景色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--bg-body` | `#000000` | 页面主背景（纯黑） |
+| `--bg-panel` | `linear-gradient(135deg, rgba(44,44,46,0.6) 0%, rgba(28,28,30,0.2) 100%)` | 面板背景 |
+| `--bg-panel-light` | `linear-gradient(135deg, rgba(58,58,60,0.4) 0%, rgba(28,28,30,0.1) 100%)` | 轻量面板背景 |
 
-## 4. Component Stylings
+#### 文字色
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--text-primary` | `#ffffff` | 主要文字（纯白） |
+| `--text-muted` | `rgba(255, 255, 255, 0.55)` | 次要/提示文字 |
 
-### Buttons
+#### 强调色（暗色模式调整）
+| 变量名 | 色值 | 用途 |
+|--------|------|------|
+| `--accent-blue` | `#0a84ff` | 主要交互色 |
+| `--accent-blue-dark` | `#2997ff` | 蓝色深色变体 |
+| `--accent-red` | `#ff453a` | 危险/错误提示 |
+| `--accent-gold` | `#ffd60a` | 警告、金币 |
+| `--accent-green` | `#32d74b` | 成功、生命值 |
 
-**Primary Blue (CTA)**
-- Background: `#0071e3` (Apple Blue)
-- Text: `#ffffff`
-- Padding: 8px 15px
-- Radius: 8px
-- Border: 1px solid transparent
-- Font: SF Pro Text, 17px, weight 400
-- Hover: background brightens slightly
-- Active: `#ededf2` background shift
-- Focus: `2px solid var(--sk-focus-color, #0071E3)` outline
-- Use: Primary call-to-action ("Buy", "Shop iPhone")
+### 2.3 装备稀有度色彩
 
-**Primary Dark**
-- Background: `#1d1d1f`
-- Text: `#ffffff`
-- Padding: 8px 15px
-- Radius: 8px
-- Font: SF Pro Text, 17px, weight 400
-- Use: Secondary CTA, dark variant
+| 稀有度 | 亮色模式 | 暗色模式 |
+|--------|----------|----------|
+| Poor（劣质） | `#8e8e93` | `#8f93a3` |
+| Normal（普通） | `#6e6e73` | `#f4f1ff` |
+| Magic（魔法） | `#34c759` | `#6dd39e` |
+| Rare（稀有） | `#0071e3` | `#59a6ff` |
+| Epic（史诗） | `#af52de` | `#c282ff` |
+| Legendary（传说） | `#ff9500` | `#ff9b52` |
 
-**Pill Link (Learn More / Shop)**
-- Background: transparent
-- Text: `#0066cc` (light bg) or `#2997ff` (dark bg)
-- Radius: 980px (full pill)
-- Border: 1px solid `#0066cc`
-- Font: SF Pro Text, 14px-17px
-- Hover: underline decoration
-- Use: "Learn more" and "Shop" links — the signature Apple inline CTA
+---
 
-**Filter / Search Button**
-- Background: `#fafafc`
-- Text: `rgba(0, 0, 0, 0.8)`
-- Padding: 0px 14px
-- Radius: 11px
-- Border: 3px solid `rgba(0, 0, 0, 0.04)`
-- Focus: `2px solid var(--sk-focus-color, #0071E3)` outline
-- Use: Search bars, filter controls
+## 3. 排版规范
 
-**Media Control**
-- Background: `rgba(210, 210, 215, 0.64)`
-- Text: `rgba(0, 0, 0, 0.48)`
-- Radius: 50% (circular)
-- Active: scale(0.9), background shifts
-- Focus: `2px solid var(--sk-focus-color, #0071e3)` outline, white bg, black text
-- Use: Play/pause, carousel arrows
+### 3.1 字体家族
 
-### Cards & Containers
-- Background: `#f5f5f7` (light) or `#272729`-`#2a2a2d` (dark)
-- Border: none (borders are rare in Apple's system)
-- Radius: 5px-8px
-- Shadow: `rgba(0, 0, 0, 0.22) 3px 5px 30px 0px` for elevated product cards
-- Content: centered, generous padding
-- Hover: no standard hover state — cards are static, links within them are interactive
+```css
+--font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+--font-text: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+```
 
-### Navigation
-- Background: `rgba(0, 0, 0, 0.8)` (translucent dark) with `backdrop-filter: saturate(180%) blur(20px)`
-- Height: 48px (compact)
-- Text: `#ffffff` at 12px, weight 400
-- Active: underline on hover
-- Logo: Apple logomark (SVG) centered or left-aligned, 17x48px viewport
-- Mobile: collapses to hamburger with full-screen overlay menu
-- The nav floats above content, maintaining its dark translucent glass regardless of section background
+- **SF Pro Display**：用于标题、大字号展示
+- **SF Pro Text**：用于正文、UI 元素
 
-### Image Treatment
-- Products on solid-color fields (black or white) — no backgrounds, no context, just the object
-- Full-bleed section images that span the entire viewport width
-- Product photography at extremely high resolution with subtle shadows
-- Lifestyle images confined to rounded-corner containers (12px+ radius)
+### 3.2 字号层级
 
-### Distinctive Components
+| 变量名 | 大小 | 用途 |
+|--------|------|------|
+| `--font-size-base` | `17px` | 正文基准字号 |
+| `--font-size-section` | `19px` | 小节标题 |
+| `--font-size-subheading` | `clamp(20px, 3vw, 28px)` | 副标题（响应式） |
+| `--font-size-heading` | `clamp(32px, 5vw, 56px)` | 主标题（响应式） |
+| `--font-size-label` | `13px` | 标签文字 |
+| `--font-size-small` | `14px` | 小号文字 |
+| `--font-size-xs` | `12px` | 极小文字 |
+| `--font-size-caption` | `11px` | 说明文字 |
 
-**Product Hero Module**
-- Full-viewport-width section with solid background (black or `#f5f5f7`)
-- Product name as the primary headline (SF Pro Display, 56px, weight 600)
-- One-line descriptor below in lighter weight
-- Two pill CTAs side by side: "Learn more" (outline) and "Buy" / "Shop" (filled)
+### 3.3 字重规范
 
-**Product Grid Tile**
-- Square or near-square card on contrasting background
-- Product image dominating 60-70% of the tile
-- Product name + one-line description below
-- "Learn more" and "Shop" link pair at bottom
+| 字重 | 数值 | 用途 |
+|------|------|------|
+| Regular | `400` | 正文、按钮 |
+| Medium | `500` | 强调文字 |
+| Semibold | `600` | 标题、重要信息 |
 
-**Feature Comparison Strip**
-- Horizontal scroll of product variants
-- Each variant as a vertical card with image, name, and key specs
-- Minimal chrome — the products speak for themselves
+### 3.4 行高与字间距
 
-## 5. Layout Principles
+| 元素 | 行高 | 字间距 |
+|------|------|--------|
+| 正文 | `1.47` | `-0.011em` |
+| H2 副标题 | `1.14` | `-0.02em` |
+| H3 小节标题 | `1.2` | `-0.015em` |
+| 标签 | `1.0` | `0.15rem`（大写字母间距） |
 
-### Spacing System
-- Base unit: 8px
-- Scale: 2px, 4px, 5px, 6px, 7px, 8px, 9px, 10px, 11px, 14px, 15px, 17px, 20px, 24px
-- Notable characteristic: the scale is dense at small sizes (2-11px) with granular 1px increments, then jumps in larger steps. This allows precise micro-adjustments for typography and icon alignment.
+---
 
-### Grid & Container
-- Max content width: approximately 980px (the recurring "980px radius" in pill buttons echoes this width)
-- Hero: full-viewport-width sections with centered content block
-- Product grids: 2-3 column layouts within centered container
-- Single-column for hero moments — one product, one message, full attention
-- No visible grid lines or gutters — spacing creates implied structure
+## 4. 组件样式
 
-### Whitespace Philosophy
-- **Cinematic breathing room**: Each product section occupies a full viewport height (or close to it). The whitespace between products is not empty — it is the pause between scenes in a film.
-- **Vertical rhythm through color blocks**: Rather than using spacing alone to separate sections, Apple uses alternating background colors (black, `#f5f5f7`, white). Each color change signals a new "scene."
-- **Compression within, expansion between**: Text blocks are tightly set (negative letter-spacing, tight line-heights) while the space surrounding them is vast. This creates a tension between density and openness.
+### 4.1 按钮 (Button)
 
-### Border Radius Scale
-- Micro (5px): Small containers, link tags
-- Standard (8px): Buttons, product cards, image containers
-- Comfortable (11px): Search inputs, filter buttons
-- Large (12px): Feature panels, lifestyle image containers
-- Full Pill (980px): CTA links ("Learn more", "Shop"), navigation pills
-- Circle (50%): Media controls (play/pause, arrows)
+#### 基础按钮
+```css
+padding: 10px 18px;
+font-size: var(--font-size-small);
+font-weight: 500;
+background: var(--accent-blue);
+color: var(--button-text);
+border: none;
+border-radius: 8px;
+cursor: pointer;
+```
 
-## 6. Depth & Elevation
+#### 胶囊按钮（Pill Button）
+```css
+border-radius: 980px;
+padding: 6px 14px;
+```
 
-| Level | Treatment | Use |
-|-------|-----------|-----|
-| Flat (Level 0) | No shadow, solid background | Standard content sections, text blocks |
-| Navigation Glass | `backdrop-filter: saturate(180%) blur(20px)` on `rgba(0,0,0,0.8)` | Sticky navigation bar — the glass effect |
-| Subtle Lift (Level 1) | `rgba(0, 0, 0, 0.22) 3px 5px 30px 0px` | Product cards, floating elements |
-| Media Control | `rgba(210, 210, 215, 0.64)` background with scale transforms | Play/pause buttons, carousel controls |
-| Focus (Accessibility) | `2px solid #0071e3` outline | Keyboard focus on all interactive elements |
+#### 按钮状态
+| 状态 | 样式 |
+|------|------|
+| Hover | `filter: brightness(1.1)` + 增强阴影 |
+| Active | `transform: scale(0.98)` |
+| Disabled | `background: rgba(0,0,0,0.04)` + `color: rgba(0,0,0,0.48)` |
+| Focus | `outline: 3px solid rgba(108, 216, 255, 0.6)` + `outline-offset: 2px` |
 
-**Shadow Philosophy**: Apple uses shadow extremely sparingly. The primary shadow (`3px 5px 30px` with 0.22 opacity) is soft, wide, and offset — mimicking a diffused studio light casting a natural shadow beneath a physical object. This reinforces the "product as physical sculpture" metaphor. Most elements have NO shadow at all; elevation comes from background color contrast (dark card on darker background, or light card on slightly different gray).
+### 4.2 表单元素
 
-### Decorative Depth
-- Navigation glass: the translucent, blurred navigation bar is the most recognizable depth element, creating a sense of floating UI above scrolling content
-- Section color transitions: depth is implied by the alternation between black and light gray sections rather than by shadows
-- Product photography shadows: the products themselves cast shadows in their photography, so the UI doesn't need to add synthetic ones
+#### 输入框 (Input)
+```css
+padding: 12px;
+font-size: var(--font-size-small);
+background: var(--bg-panel-light);
+border: 1px solid var(--border-light);
+border-radius: 8px;
+```
 
-## 7. Do's and Don'ts
+#### 焦点状态
+```css
+border-color: var(--accent-blue);
+box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+```
 
-### Do
-- Use SF Pro Display at 20px+ and SF Pro Text below 20px — respect the optical sizing boundary
-- Apply negative letter-spacing at all text sizes (not just headlines) — Apple tracks tight universally
-- Use Apple Blue (`#0071e3`) ONLY for interactive elements — it must be the singular accent
-- Alternate between black and light gray (`#f5f5f7`) section backgrounds for cinematic rhythm
-- Use 980px pill radius for CTA links — the signature Apple link shape
-- Keep product imagery on solid-color fields with no competing visual elements
-- Use the translucent dark glass (`rgba(0,0,0,0.8)` + blur) for sticky navigation
-- Compress headline line-heights to 1.07-1.14 — Apple headlines are famously tight
+#### 标签 (Label)
+```css
+font-size: var(--font-size-label);
+letter-spacing: 0.15rem;
+color: var(--text-muted);
+```
 
-### Don't
-- Don't introduce additional accent colors — the entire chromatic budget is spent on blue
-- Don't use heavy shadows or multiple shadow layers — Apple's shadow system is one soft diffused shadow or nothing
-- Don't use borders on cards or containers — Apple almost never uses visible borders (except on specific buttons)
-- Don't apply wide letter-spacing to SF Pro — it is designed to run tight at every size
-- Don't use weight 800 or 900 — the maximum is 700 (bold), and even that is rare
-- Don't add textures, patterns, or gradients to backgrounds — solid colors only
-- Don't make the navigation opaque — the glass blur effect is essential to the Apple UI identity
-- Don't center-align body text — Apple body copy is left-aligned; only headlines center
-- Don't use rounded corners larger than 12px on rectangular elements (980px is for pills only)
+### 4.3 卡片 (Card)
 
-## 8. Responsive Behavior
+#### 面板卡片
+```css
+background: var(--bg-panel-light);
+backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+border: 1px solid var(--border-light);
+box-shadow: var(--shadow-card);
+border-radius: 16px;
+```
 
-### Breakpoints
-| Name | Width | Key Changes |
-|------|-------|-------------|
-| Small Mobile | <360px | Minimum supported, single column |
-| Mobile | 360-480px | Standard mobile layout |
-| Mobile Large | 480-640px | Wider single column, larger images |
-| Tablet Small | 640-834px | 2-column product grids begin |
-| Tablet | 834-1024px | Full tablet layout, expanded nav |
-| Desktop Small | 1024-1070px | Standard desktop layout begins |
-| Desktop | 1070-1440px | Full layout, max content width |
-| Large Desktop | >1440px | Centered with generous margins |
+#### 圆角规范
+| 类型 | 圆角值 |
+|------|--------|
+| 小型元素 | `4px - 6px` |
+| 按钮、输入框 | `8px` |
+| 卡片、面板 | `16px - 20px` |
+| 胶囊形状 | `980px` |
 
-### Touch Targets
-- Primary CTAs: 8px 15px padding creating ~44px touch height
-- Navigation links: 48px height with adequate spacing
-- Media controls: 50% radius circular buttons, minimum 44x44px
-- "Learn more" pills: generous padding for comfortable tapping
+### 4.4 导航栏 (Navigation)
 
-### Collapsing Strategy
-- Hero headlines: 56px Display → 40px → 28px on mobile, maintaining tight line-height proportionally
-- Product grids: 3-column → 2-column → single column stacked
-- Navigation: full horizontal nav → compact mobile menu (hamburger)
-- Product hero modules: full-bleed maintained at all sizes, text scales down
-- Section backgrounds: maintain full-width color blocks at all breakpoints — the cinematic rhythm never breaks
-- Image sizing: products scale proportionally, never crop — the product silhouette is sacred
+```css
+position: sticky;
+top: 16px;
+max-width: 980px;
+border-radius: 980px;
+background: var(--nav-bg);
+backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+padding: 8px 16px;
+box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+```
 
-### Image Behavior
-- Product photography maintains aspect ratio at all breakpoints
-- Hero product images scale down but stay centered
-- Full-bleed section backgrounds persist at every size
-- Lifestyle images may crop on mobile but maintain their rounded corners
-- Lazy loading for below-fold product images
+### 4.5 生命值条 (Health Meter)
 
-## 9. Agent Prompt Guide
+```css
+height: 14px;
+border-radius: 6px;
+background: var(--bg-body);
+```
 
-### Quick Color Reference
-- Primary CTA: Apple Blue (`#0071e3`)
-- Page background (light): `#f5f5f7`
-- Page background (dark): `#000000`
-- Heading text (light): `#1d1d1f`
-- Heading text (dark): `#ffffff`
-- Body text: `rgba(0, 0, 0, 0.8)` on light, `#ffffff` on dark
-- Link (light bg): `#0066cc`
-- Link (dark bg): `#2997ff`
-- Focus ring: `#0071e3`
-- Card shadow: `rgba(0, 0, 0, 0.22) 3px 5px 30px 0px`
+#### 状态颜色
+| 状态 | 颜色 |
+|------|------|
+| 正常 | `linear-gradient(90deg, #34c759, #32d74b)` |
+| 警告（<50%） | `linear-gradient(90deg, #f59e0b, #ffd60a)` |
+| 危险（<25%） | `linear-gradient(90deg, #ff3b30, #ff453a)` |
+| 过量治疗 | `--accent-blue` |
 
-### Example Component Prompts
-- "Create a hero section on black background. Headline at 56px SF Pro Display weight 600, line-height 1.07, letter-spacing -0.28px, color white. One-line subtitle at 21px SF Pro Display weight 400, line-height 1.19, color white. Two pill CTAs: 'Learn more' (transparent bg, white text, 1px solid white border, 980px radius) and 'Buy' (Apple Blue #0071e3 bg, white text, 8px radius, 8px 15px padding)."
-- "Design a product card: #f5f5f7 background, 8px border-radius, no border, no shadow. Product image top 60% of card on solid background. Title at 28px SF Pro Display weight 400, letter-spacing 0.196px, line-height 1.14. Description at 14px SF Pro Text weight 400, color rgba(0,0,0,0.8). 'Learn more' and 'Shop' links in #0066cc at 14px."
-- "Build the Apple navigation: sticky, 48px height, background rgba(0,0,0,0.8) with backdrop-filter: saturate(180%) blur(20px). Links at 12px SF Pro Text weight 400, white text. Apple logo left, links centered, search and bag icons right."
-- "Create an alternating section layout: first section black bg with white text and centered product image, second section #f5f5f7 bg with #1d1d1f text. Each section near full-viewport height with 56px headline and two pill CTAs below."
-- "Design a 'Learn more' link: text #0066cc on light bg or #2997ff on dark bg, 14px SF Pro Text, underline on hover. After the text, include a right-arrow chevron character (>). Wrap in a container with 980px border-radius for pill shape when used as a standalone CTA."
+---
 
-### Iteration Guide
-1. Every interactive element gets Apple Blue (`#0071e3`) — no other accent colors
-2. Section backgrounds alternate: black for immersive moments, `#f5f5f7` for informational moments
-3. Typography optical sizing: SF Pro Display at 20px+, SF Pro Text below — never mix
-4. Negative letter-spacing at all sizes: -0.28px at 56px, -0.374px at 17px, -0.224px at 14px, -0.12px at 12px
-5. The navigation glass effect (translucent dark + blur) is non-negotiable — it defines the Apple web experience
-6. Products always appear on solid color fields — never on gradients, textures, or lifestyle backgrounds in hero modules
-7. Shadow is rare and always soft: `3px 5px 30px 0.22 opacity` or nothing at all
-8. Pill CTAs use 980px radius — this creates the signature Apple rounded-rectangle-that-looks-like-a-capsule shape
+## 5. 布局规则
+
+### 5.1 容器
+
+```css
+.container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 32px 28px 40px;
+}
+```
+
+### 5.2 间距系统
+
+| 变量/值 | 用途 |
+|---------|------|
+| `4px` | 极小间距（图标与文字） |
+| `8px` | 小间距（行内元素） |
+| `12px` | 中小间距（组件内部） |
+| `16px` | 中等间距（标准间距） |
+| `20px` | 较大间距（区块间距） |
+| `24px` | 大间距（面板内边距） |
+| `28px` | 较大间距（主要区块） |
+| `32px` | 大间距（容器内边距） |
+
+### 5.3 Grid 布局
+
+#### 表单双列布局
+```css
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 16px 20px;
+```
+
+#### 自适应网格
+```css
+grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+gap: 20px;
+```
+
+---
+
+## 6. 玻璃质感效果
+
+### 6.1 毛玻璃背景
+
+```css
+background: var(--bg-panel-light);
+backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+```
+
+- `--glass-blur: 24px` - 模糊半径
+
+### 6.2 玻璃边缘高光
+
+```css
+/* 亮色模式 */
+--glass-border-gradient: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.3) 20%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.3) 80%,
+    rgba(255, 255, 255, 0.7) 100%
+);
+```
+
+### 6.3 阴影系统
+
+| 变量名 | 样式 | 用途 |
+|--------|------|------|
+| `--shadow-card` | `0 8px 32px 0 rgba(31,38,135,0.1), inset 1px 1px 0 0 rgba(255,255,255,0.8)` | 卡片阴影 |
+| `--shadow-subtle` | `0 4px 16px 0 rgba(31,38,135,0.05), inset 1px 1px 0 0 rgba(255,255,255,0.6)` | 轻微阴影 |
+
+### 6.4 背景装饰
+
+页面背景使用四个角落的彩色径向渐变，为玻璃效果提供折射底色：
+
+```css
+background-image: 
+    radial-gradient(circle at 0% 0%, rgba(0, 113, 227, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(52, 199, 89, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 100% 0%, rgba(255, 59, 48, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(245, 158, 11, 0.2) 0%, transparent 40%);
+```
+
+---
+
+## 7. 动画系统
+
+### 7.1 过渡时间
+
+| 时长 | 用途 |
+|------|------|
+| `0.1s` | 快速反馈（按钮按下） |
+| `0.2s` | 标准过渡（颜色、边框） |
+| `0.3s` | 中等过渡（背景色） |
+| `0.5s` | 慢速过渡（进度条） |
+
+### 7.2 缓动函数
+
+| 函数 | 用途 |
+|------|------|
+| `ease` | 通用过渡 |
+| `ease-in-out` | 双向动画 |
+| `cubic-bezier(0.25, 1, 0.5, 1)` | 进度条动画 |
+
+### 7.3 浮动文字动画
+
+#### 普通伤害
+```css
+@keyframes fct-float {
+    0%   { opacity: 0; transform: translate(-50%, 20px) scale(0.8); }
+    15%  { opacity: 1; transform: translate(-50%, -5px) scale(1.1); }
+    30%  { transform: translate(-50%, -15px) scale(1.0); }
+    80%  { opacity: 1; transform: translate(-50%, -40px); }
+    100% { opacity: 0; transform: translate(-50%, -60px); }
+}
+```
+
+#### 暴击伤害
+```css
+@keyframes fct-float-crit {
+    /* 更大的缩放和位移 */
+}
+```
+
+#### 治疗效果
+```css
+@keyframes fct-float-heal {
+    /* 绿色向上飘动 */
+}
+```
+
+---
+
+## 8. 响应式设计
+
+### 8.1 断点设置
+
+| 断点 | 宽度 | 用途 |
+|------|------|------|
+| 大屏 | `> 960px` | 默认布局 |
+| 中屏 | `≤ 960px` | 减少内边距，堆叠布局 |
+| 小屏 | `≤ 720px` | 单列布局，全宽按钮 |
+| 属性表格 | `≤ 900px` | 属性表格简化为双列 |
+
+### 8.2 响应式调整
+
+#### 中屏 (≤ 960px)
+```css
+body { padding: 24px 12px 36px; }
+.container { padding: 28px 22px 34px; }
+.battle-area { flex-direction: column; }
+```
+
+#### 小屏 (≤ 720px)
+```css
+.player-form { grid-template-columns: 1fr; }
+button { width: 100%; }
+```
+
+---
+
+## 附录：CSS 变量速查表
+
+### 完整变量列表
+
+```css
+:root {
+    /* 背景 */
+    --bg-body: #f5f5f7;
+    --bg-panel: linear-gradient(...);
+    --bg-panel-light: linear-gradient(...);
+    
+    /* 文字 */
+    --text-primary: #1d1d1f;
+    --text-muted: rgba(0, 0, 0, 0.56);
+    --button-text: #ffffff;
+    
+    /* 强调色 */
+    --accent-blue: #0071e3;
+    --accent-blue-dark: #0077ed;
+    --accent-red: #ff3b30;
+    --accent-gold: #f59e0b;
+    --accent-green: #34c759;
+    
+    /* 边框 */
+    --border-light: rgba(255, 255, 255, 0.5);
+    --border-dark: transparent;
+    
+    /* 字体 */
+    --font-display: 'SF Pro Display', ...;
+    --font-text: 'SF Pro Text', ...;
+    
+    /* 字号 */
+    --font-size-base: 17px;
+    --font-size-small: 14px;
+    --font-size-xs: 12px;
+    --font-size-caption: 11px;
+    --font-size-label: 13px;
+    --font-size-heading: clamp(32px, 5vw, 56px);
+    --font-size-subheading: clamp(20px, 3vw, 28px);
+    --font-size-section: 19px;
+    
+    /* 阴影 */
+    --shadow-card: 0 8px 32px 0 rgba(31, 38, 135, 0.1), inset 1px 1px 0 0 rgba(255, 255, 255, 0.8);
+    --shadow-subtle: 0 4px 16px 0 rgba(31, 38, 135, 0.05), inset 1px 1px 0 0 rgba(255, 255, 255, 0.6);
+    
+    /* 玻璃效果 */
+    --glass-blur: 24px;
+    --glass-border-gradient: linear-gradient(...);
+    
+    /* 导航 */
+    --nav-bg: linear-gradient(...);
+    --nav-border: rgba(255, 255, 255, 0.5);
+}
+```
+
+---
+
+*文档版本: 1.0.0*
+*最后更新: 2026-04-17*
